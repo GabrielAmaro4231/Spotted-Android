@@ -1,5 +1,6 @@
 package com.gabrielamaro.spotted.ui.home
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,11 +20,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 
 @Composable
 fun AircraftItem(
     tail: String,
+    manufacturer: String,
     model: String,
+    airportCity: String,
+    airportIcao: String,
+    airportIata: String,
+    datetime: String,
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -36,6 +44,7 @@ fun AircraftItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Left-side square image placeholder
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -48,6 +57,7 @@ fun AircraftItem(
 
             Spacer(modifier = Modifier.width(12.dp))
 
+            // Tail number and model
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = tail,
@@ -63,7 +73,20 @@ fun AircraftItem(
                 )
             }
 
-            IconButton(onClick = { /* TODO: navigate to details */ }) {
+            // Eye icon: encode args and navigate
+            IconButton(onClick = {
+                // Use android.net.Uri.encode to encode each segment
+                fun enc(s: String) = Uri.encode(s)
+                val route = "details/" +
+                        enc(tail) + "/" +
+                        enc(manufacturer) + "/" +
+                        enc(model) + "/" +
+                        enc(airportCity) + "/" +
+                        enc(airportIcao) + "/" +
+                        enc(airportIata) + "/" +
+                        enc(datetime)
+                navController.navigate(route)
+            }) {
                 Icon(
                     imageVector = Icons.Filled.Visibility,
                     contentDescription = "View details",

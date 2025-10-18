@@ -8,23 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.gabrielamaro.spotted.data.generatePlaceholders
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-    // Placeholder data: tail number and model
-    val items = List(38) { index ->
-        AircraftPlaceholder(
-            tail = "PT-${1000 + index}",
-            model = when (index % 5) {
-                0 -> "Boeing 737"
-                1 -> "Airbus A320"
-                2 -> "Embraer E190"
-                3 -> "Cessna 172"
-                else -> "Boeing 777"
-            }
-        )
-    }
+    val items = generatePlaceholders(count = 78)
 
     Scaffold(
         topBar = {
@@ -47,7 +36,13 @@ fun HomeScreen(navController: NavController) {
             items(items) { item ->
                 AircraftItem(
                     tail = item.tail,
+                    manufacturer = item.manufacturer,
                     model = item.model,
+                    airportCity = item.airportCity,
+                    airportIcao = item.airportIcao,
+                    airportIata = item.airportIata,
+                    datetime = item.datetime,
+                    navController = navController,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
@@ -56,6 +51,3 @@ fun HomeScreen(navController: NavController) {
         }
     }
 }
-
-// Simple holder used only in this file for placeholders
-data class AircraftPlaceholder(val tail: String, val model: String)
