@@ -11,6 +11,7 @@ import com.gabrielamaro.spotted.ui.details.AircraftDetails
 import com.gabrielamaro.spotted.ui.home.HomeScreen
 import com.gabrielamaro.spotted.ui.home.HomeViewModel
 import com.gabrielamaro.spotted.ui.login.LoginScreen
+import com.gabrielamaro.spotted.ui.add.AddAircraftScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
@@ -24,6 +25,10 @@ fun AppNavigation(navController: NavHostController) {
 
         composable("home") {
             HomeScreen(navController, viewModel = homeViewModel)
+        }
+
+        composable("addAircraft") {
+            AddAircraftScreen(navController, homeViewModel)
         }
 
         composable(
