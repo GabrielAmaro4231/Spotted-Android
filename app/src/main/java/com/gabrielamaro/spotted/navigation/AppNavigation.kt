@@ -1,24 +1,31 @@
 package com.gabrielamaro.spotted.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.gabrielamaro.spotted.ui.home.HomeScreen
 import com.gabrielamaro.spotted.ui.details.AircraftDetails
+import com.gabrielamaro.spotted.ui.home.HomeScreen
+import com.gabrielamaro.spotted.ui.home.HomeViewModel
 import com.gabrielamaro.spotted.ui.login.LoginScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
+    val homeViewModel: HomeViewModel = viewModel()
+
     NavHost(navController = navController, startDestination = "login") {
+
         composable("login") {
             LoginScreen(onLoginClick = { navController.navigate("home") })
         }
+
         composable("home") {
-            HomeScreen(navController)
+            HomeScreen(navController, viewModel = homeViewModel)
         }
+
         composable(
             route = "details/{tail}/{manufacturer}/{model}/{airportCity}/{airportIcao}/{airportIata}/{datetime}",
             arguments = listOf(
@@ -48,7 +55,8 @@ fun AppNavigation(navController: NavHostController) {
                 airportCity = airportCity,
                 airportIcao = airportIcao,
                 airportIata = airportIata,
-                datetime = datetime
+                datetime = datetime,
+                viewModel = homeViewModel
             )
         }
     }
