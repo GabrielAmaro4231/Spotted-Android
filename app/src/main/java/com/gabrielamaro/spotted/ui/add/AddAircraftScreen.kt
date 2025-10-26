@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.gabrielamaro.spotted.ui.home.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +36,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 title = { Text("Add New Aircraft") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -81,13 +81,13 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedTextField(
-                value = "Image picker coming soon...",
-                onValueChange = {},
-                label = { Text("Photo") },
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+//            OutlinedTextField(
+//                value = "Image picker coming soon...",
+//                onValueChange = {},
+//                label = { Text("Photo") },
+//                readOnly = true,
+//                modifier = Modifier.fillMaxWidth()
+//            )
 
             Button(
                 onClick = {

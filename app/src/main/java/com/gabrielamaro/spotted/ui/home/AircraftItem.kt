@@ -1,26 +1,31 @@
 package com.gabrielamaro.spotted.ui.home
 
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 
 @Composable
 fun AircraftItem(
@@ -34,6 +39,15 @@ fun AircraftItem(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
+    var thumbnailUrl by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(tail) {
+        isLoading = true
+        thumbnailUrl = fetchThumbnailForTail(tail)
+        isLoading = false
+    }
+
     Card(
         modifier = modifier,
         elevation = CardDefaults.cardElevation(4.dp)
@@ -44,20 +58,44 @@ fun AircraftItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left-side square image placeholder
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .width(96.dp)   // wider
+                    .height(54.dp)  // 16:9 ratio
                     .clip(RoundedCornerShape(6.dp))
                     .background(Color(0xFFB3E5FC)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "✈️", fontSize = 28.sp)
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    thumbnailUrl != null -> {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(thumbnailUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Aircraft thumbnail",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+
+                    else -> {
+                        Text(text = "✈️", fontSize = 28.sp)
+                    }
+                }
             }
+
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Tail number and model
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = tail,
@@ -73,9 +111,7 @@ fun AircraftItem(
                 )
             }
 
-            // Eye icon: encode args and navigate
             IconButton(onClick = {
-                // Use android.net.Uri.encode to encode each segment
                 fun enc(s: String) = Uri.encode(s)
                 val route = "details/" +
                         enc(tail) + "/" +
@@ -96,3 +132,31 @@ fun AircraftItem(
         }
     }
 }
+
+suspend fun fetchThumbnailForTail(tail: String): String? {
+    return withContext(Dispatchers.IO) {
+        try {
+            val apiUrl = "https://www.jetapi.dev/api?reg=${Uri.encode(tail)}&photos=1&only_jp=true"
+            val connection = URL(apiUrl).openConnection() as HttpURLConnection
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+            connection.requestMethod = "GET"
+
+            connection.inputStream.bufferedReader().use { reader ->
+                val response = reader.readText()
+                val json = JSONObject(response)
+                val imagesArray = json.optJSONArray("Images")
+                if (imagesArray != null && imagesArray.length() > 0) {
+                    val first = imagesArray.getJSONObject(0)
+                    val url = first.optString("Thumbnail", null)
+                    return@withContext url
+                }
+            }
+            null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+}
+

@@ -2,37 +2,67 @@ package com.gabrielamaro.spotted.data
 
 data class Airport(val city: String, val icao: String, val iata: String)
 data class Manufacturer(val name: String, val models: List<String>)
-data class AircraftPlaceholder(
-    val tail: String,
-    val manufacturer: String,
-    val model: String,
-    val airportCity: String,
-    val airportIcao: String,
-    val airportIata: String,
-    val datetime: String
-)
 
-/**
- * Top 100 most popular airports (sample subset shown).
- * In real usage, you can replace or expand this list.
- */
 val defaultAirports = listOf(
-    Airport("Atlanta", "KATL", "ATL"),
-    Airport("Beijing", "ZBAA", "PEK"),
-    Airport("Los Angeles", "KLAX", "LAX"),
-    Airport("Dubai", "OMDB", "DXB"),
-    Airport("Tokyo Haneda", "RJTT", "HND"),
-    Airport("London Heathrow", "EGLL", "LHR"),
-    Airport("Paris Charles de Gaulle", "LFPG", "CDG"),
-    Airport("Chicago O'Hare", "KORD", "ORD"),
-    Airport("Shanghai Pudong", "ZSPD", "PVG"),
-    Airport("Dallas/Fort Worth", "KDFW", "DFW"),
-    // ... add up to 100 if desired
+    Airport("Cruzeiro do Sul", "SBCZ", "CZS"),
+    Airport("Rio Branco", "SBRB", "RBR"),
+    Airport("Maceió Zumbi dos Palmares", "SBMO", "MCZ"),
+    Airport("Aracaju Santa Maria", "SBAR", "AJU"),
+    Airport("Salvador Deputado Luís Eduardo Magalhães", "SBSV", "SSA"),
+    Airport("Ilhéus Jorge Amado", "SBIL", "IOS"),
+    Airport("Vitória da Conquista Glauber Rocha", "SBVC", "VDC"),
+    Airport("Fortaleza Pinto Martins", "SBFZ", "FOR"),
+    Airport("Juazeiro do Norte Orlando Bezerra", "SBJU", "JDO"),
+    Airport("Cabo Frio", "SBCB", "CFB"),
+    Airport("Campos Bartolomeu Lysandro", "SBCP", "CAW"),
+    Airport("Macaé Benedito Lacerda", "SBME", "MEA"),
+    Airport("Belo Horizonte Confins Tancredo Neves", "SBCF", "CNF"),
+    Airport("Belo Horizonte Pampulha", "SBBH", "PLU"),
+    Airport("Uberlândia Ten. Cel. Aviador César Bombonato", "SBUL", "UDI"),
+    Airport("Uberaba Mário de Almeida Franco", "SBUR", "UBA"),
+    Airport("Montes Claros Mário Ribeiro", "SBMK", "MOC"),
+    Airport("Governador Valadares Coronel Altino Machado", "SBGV", "GVR"),
+    Airport("Divinópolis Brigadeiro Cabral", "SNDV", "DIQ"),
+    Airport("Juiz de Fora Francisco Álvares de Assis", "SBJF", "JDF"),
+    Airport("Juiz de Fora Zona da Mata", "SBZM", "IZA"),
+    Airport("Ipatinga Usiminas", "SBIP", "IPN"),
+    Airport("Vitória Eurico de Aguiar Salles", "SBVT", "VIX"),
+    Airport("Goiânia Santa Genoveva", "SBGO", "GYN"),
+    Airport("Caldas Novas", "SBCN", "CLV"),
+    Airport("São Luís Marechal Cunha Machado", "SBSL", "SLZ"),
+    Airport("Imperatriz Prefeito Renato Moreira", "SBIZ", "IMP"),
+    Airport("Cuiabá Marechal Rondon", "SBCY", "CGB"),
+    Airport("Rondonópolis", "SBRD", "ROO"),
+    Airport("Sinop Presidente João Figueiredo", "SBSI", "OPS"),
+    Airport("Alta Floresta Piloto Osvaldo Marques Dias", "SBAT", "AFL"),
+    Airport("Campo Grande", "SBCG", "CGR"),
+    Airport("Corumbá", "SBCR", "CMG"),
+    Airport("Dourados Francisco de Matos Pereira", "SSDO", "DOU"),
+    Airport("Belém Val-de-Cans", "SBBE", "BEL"),
+    Airport("Santarém Maestro Wilson Fonseca", "SBSN", "STM"),
+    Airport("Marabá", "SBMA", "MAB"),
+    Airport("Altamira", "SBHT", "ATM"),
+    Airport("Palmas Brigadeiro Lysias Rodrigues", "SBPJ", "PMW"),
+    Airport("João Pessoa Castro Pinto", "SBJP", "JPA"),
+    Airport("Campina Grande Presidente João Suassuna", "SBKG", "CPV"),
+    Airport("Curitiba Afonso Pena", "SBCT", "CWB"),
+    Airport("Londrina Gov. José Richa", "SBLO", "LDB"),
+    Airport("Maringá Sílvio Name Júnior", "SBMG", "MGF"),
+    Airport("Foz do Iguaçu Cataratas", "SBFI", "IGU"),
+    Airport("Ponta Grossa Comte. Antonio Amilton Beraldo", "SBPG", "PGZ"),
+    Airport("Paranaguá", "SSPG", "PNG"),
+    Airport("Recife Guararapes Gilberto Freyre", "SBRF", "REC"),
+    Airport("Petrolina Sen. Nilo Coelho", "SBPL", "PNZ"),
+    Airport("Teresina Sen. Petrônio Portella", "SBTE", "THE"),
+    Airport("Natal Gov. Aluízio Alves", "SBSG", "NAT"),
+    Airport("Mossoró Dix-Sept Rosado", "SBMS", "MVF"),
+    Airport("Porto Alegre Salgado Filho", "SBPA", "POA"),
+    Airport("Canoas Air Base", "SBCO", "QNS"),
+    Airport("Passo Fundo Lauro Kortz", "SBPF", "PFB"),
+    Airport("Pelotas João Simões Lopes Neto", "SBPK", "PET"),
+    Airport("Caxias do Sul Hugo Cantergiani", "SBCX", "CXJ"),
 )
 
-/**
- * Top 100 most popular aircraft types (grouped by manufacturer).
- */
 val defaultManufacturers = listOf(
     Manufacturer("Boeing", listOf("737-800", "737 MAX 8", "747-8", "757-200", "767-300ER", "777-300ER", "787-9")),
     Manufacturer("Airbus", listOf("A320neo", "A321neo", "A330-300", "A350-900", "A380-800")),
@@ -40,35 +70,4 @@ val defaultManufacturers = listOf(
     Manufacturer("Bombardier", listOf("CRJ900", "Q400")),
     Manufacturer("Cessna", listOf("Citation XLS+", "208 Caravan")),
     Manufacturer("ATR", listOf("ATR 72-600", "ATR 42-500"))
-)
-
-/**
- * Static hardcoded list of 25 placeholder aircraft.
- */
-val aircraftPlaceholders = listOf(
-    AircraftPlaceholder("PT-101A", "Boeing", "737-800", "Atlanta", "KATL", "ATL", "2025-10-10 08:45"),
-    AircraftPlaceholder("PT-102B", "Airbus", "A320neo", "Los Angeles", "KLAX", "LAX", "2025-10-11 09:20"),
-    AircraftPlaceholder("PT-103C", "Embraer", "E190", "São Paulo", "SBGR", "GRU", "2025-10-11 15:30"),
-    AircraftPlaceholder("PT-104D", "Airbus", "A350-900", "London Heathrow", "EGLL", "LHR", "2025-10-09 22:00"),
-    AircraftPlaceholder("PT-105E", "Boeing", "777-300ER", "Dubai", "OMDB", "DXB", "2025-10-12 04:25"),
-    AircraftPlaceholder("PT-106F", "Cessna", "208 Caravan", "Curitiba", "SBCT", "CWB", "2025-10-10 12:45"),
-    AircraftPlaceholder("PT-107G", "Boeing", "787-9", "Tokyo Haneda", "RJTT", "HND", "2025-10-14 18:15"),
-    AircraftPlaceholder("PT-108H", "Airbus", "A321neo", "Paris Charles de Gaulle", "LFPG", "CDG", "2025-10-13 05:50"),
-    AircraftPlaceholder("PT-109I", "Embraer", "E195-E2", "São José do Rio Preto", "SBSR", "SJP", "2025-10-16 14:10"),
-    AircraftPlaceholder("PT-110J", "Boeing", "737 MAX 8", "Chicago O'Hare", "KORD", "ORD", "2025-10-17 09:05"),
-    AircraftPlaceholder("PT-111K", "Airbus", "A330-300", "Beijing", "ZBAA", "PEK", "2025-10-11 11:40"),
-    AircraftPlaceholder("PT-112L", "Boeing", "767-300ER", "Dallas/Fort Worth", "KDFW", "DFW", "2025-10-15 06:10"),
-    AircraftPlaceholder("PT-113M", "Boeing", "757-200", "Atlanta", "KATL", "ATL", "2025-10-09 19:45"),
-    AircraftPlaceholder("PT-114N", "ATR", "ATR 72-600", "Belo Horizonte", "SBCF", "CNF", "2025-10-18 07:55"),
-    AircraftPlaceholder("PT-115O", "Bombardier", "Q400", "London Heathrow", "EGLL", "LHR", "2025-10-17 10:20"),
-    AircraftPlaceholder("PT-116P", "Airbus", "A380-800", "Dubai", "OMDB", "DXB", "2025-10-10 23:00"),
-    AircraftPlaceholder("PT-117Q", "Embraer", "E175", "Curitiba", "SBCT", "CWB", "2025-10-15 17:30"),
-    AircraftPlaceholder("PT-118R", "Boeing", "787-9", "Shanghai Pudong", "ZSPD", "PVG", "2025-10-13 21:10"),
-    AircraftPlaceholder("PT-119S", "Cessna", "Citation XLS+", "Paris Charles de Gaulle", "LFPG", "CDG", "2025-10-14 09:25"),
-    AircraftPlaceholder("PT-120T", "Airbus", "A321neo", "São Paulo", "SBGR", "GRU", "2025-10-18 13:40"),
-    AircraftPlaceholder("PT-121U", "Boeing", "747-8", "Tokyo Haneda", "RJTT", "HND", "2025-10-16 15:15"),
-    AircraftPlaceholder("PT-122V", "ATR", "ATR 42-500", "Belo Horizonte", "SBCF", "CNF", "2025-10-10 06:30"),
-    AircraftPlaceholder("PT-123W", "Airbus", "A350-900", "London Heathrow", "EGLL", "LHR", "2025-10-11 16:45"),
-    AircraftPlaceholder("PT-124X", "Boeing", "737-800", "Atlanta", "KATL", "ATL", "2025-10-12 11:00"),
-    AircraftPlaceholder("PT-125Y", "Embraer", "E195-E2", "Curitiba", "SBCT", "CWB", "2025-10-18 08:00")
 )
