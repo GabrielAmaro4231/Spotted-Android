@@ -28,7 +28,7 @@ import java.net.URL
 
 @Composable
 fun AircraftItem(
-    id: Int, // ✅ added ID
+    id: Int,
     tail: String,
     manufacturer: String,
     model: String,
@@ -60,8 +60,8 @@ fun AircraftItem(
         ) {
             Box(
                 modifier = Modifier
-                    .width(96.dp)   // wider
-                    .height(54.dp)  // 16:9 ratio
+                    .width(96.dp)
+                    .height(54.dp)
                     .clip(RoundedCornerShape(6.dp))
                     .background(Color(0xFFB3E5FC)),
                 contentAlignment = Alignment.Center
@@ -112,7 +112,6 @@ fun AircraftItem(
 
             IconButton(onClick = {
                 fun enc(s: String) = Uri.encode(s)
-                // ✅ now includes ID in navigation route
                 val route = "details/${id}/${enc(tail)}/${enc(manufacturer)}/${enc(model)}/${enc(airportCity)}/${enc(airportIcao)}/${enc(airportIata)}/${enc(datetime)}"
                 navController.navigate(route)
             }) {

@@ -27,12 +27,10 @@ fun AppNavigation(navController: NavHostController) {
             HomeScreen(navController, viewModel = homeViewModel)
         }
 
-        // Regular Add screen
         composable("addAircraft") {
             AddAircraftScreen(navController, homeViewModel)
         }
 
-        // Edit mode - same screen but with editTail param
         composable(
             route = "addAircraft?editTail={editTail}",
             arguments = listOf(
@@ -47,7 +45,6 @@ fun AppNavigation(navController: NavHostController) {
             AddAircraftScreen(navController, homeViewModel, editTail)
         }
 
-        // ✅ Details screen (now includes ID)
         composable(
             route = "details/{id}/{tail}/{manufacturer}/{model}/{airportCity}/{airportIcao}/{airportIata}/{datetime}",
             arguments = listOf(
@@ -65,7 +62,7 @@ fun AppNavigation(navController: NavHostController) {
             val id = args.getInt("id")
             AircraftDetails(
                 navController = navController,
-                id = id, // ✅ Pass aircraft ID
+                id = id,
                 tail = args.getString("tail") ?: "",
                 manufacturer = args.getString("manufacturer") ?: "",
                 model = args.getString("model") ?: "",

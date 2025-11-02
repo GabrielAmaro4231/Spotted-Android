@@ -20,12 +20,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 fun AddAircraftScreen(
     navController: NavController,
     viewModel: HomeViewModel,
-    editTail: String? = null // optional parameter for editing
+    editTail: String? = null
 ) {
     val items by viewModel.aircrafts.collectAsState()
     val isEditMode = editTail != null
 
-    // find existing aircraft
     val existingAircraft = remember(editTail, items) {
         editTail?.let { tail ->
             items.firstOrNull { it.tail.equals(tail, ignoreCase = true) }
@@ -37,7 +36,6 @@ fun AddAircraftScreen(
     var selectedAirport by remember { mutableStateOf("") }
     var registration by remember { mutableStateOf("") }
 
-    // preload existing data if editing
     LaunchedEffect(existingAircraft) {
         existingAircraft?.let { a ->
             selectedManufacturer = a.manufacturer
@@ -134,7 +132,6 @@ fun AddAircraftScreen(
                             datetime = existingAircraft?.datetime ?: currentDate
                         )
 
-                        // ✅ Always return to Home screen after saving
                         navController.popBackStack("home", inclusive = false)
                     }
                 },

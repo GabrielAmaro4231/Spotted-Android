@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.gabrielamaro.spotted.data.local.entity.AircraftEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,7 +18,6 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // Observe Room Flow as Compose state
     val items by viewModel.aircrafts.collectAsState()
 
     Scaffold(
@@ -45,7 +43,6 @@ fun HomeScreen(
         }
     ) { innerPadding ->
         if (items.isEmpty()) {
-            // Display empty state message when no data is found
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -58,7 +55,6 @@ fun HomeScreen(
                 )
             }
         } else {
-            // Display list of aircrafts
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -67,7 +63,7 @@ fun HomeScreen(
             ) {
                 items(items) { item ->
                     AircraftItem(
-                        id = item.id, // ✅ include ID
+                        id = item.id,
                         tail = item.tail,
                         manufacturer = item.manufacturer,
                         model = item.model,

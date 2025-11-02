@@ -13,11 +13,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dao = DatabaseProvider.getDatabase(application).aircraftDao()
 
-    // Reactive list of all aircrafts
     val aircrafts = dao.getAllAircrafts()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** Add or update aircraft (using Room @Upsert) */
     fun addOrUpdateAircraft(
         id: Int? = null,
         tail: String,
@@ -29,7 +27,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         datetime: String
     ) {
         val aircraft = AircraftEntity(
-            id = id ?: 0, // 0 triggers insert; existing id triggers update
+            id = id ?: 0,
             tail = tail,
             manufacturer = manufacturer,
             model = model,
@@ -43,14 +41,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Delete aircraft by ID */
     fun deleteAircraft(id: Int) {
         viewModelScope.launch {
             dao.deleteById(id)
         }
     }
 
-    /** Optionally preload data */
     fun preloadIfEmpty(defaults: List<AircraftEntity>) {
         viewModelScope.launch {
             if (aircrafts.value.isEmpty()) {

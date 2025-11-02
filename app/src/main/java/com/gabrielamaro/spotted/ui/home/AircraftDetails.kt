@@ -1,6 +1,5 @@
 package com.gabrielamaro.spotted.ui.details
 
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -29,7 +27,7 @@ import com.gabrielamaro.spotted.ui.home.fetchThumbnailForTail
 @Composable
 fun AircraftDetails(
     navController: NavController,
-    id: Int, // ✅ Added ID parameter
+    id: Int,
     tail: String,
     manufacturer: String,
     model: String,
@@ -84,7 +82,6 @@ fun AircraftDetails(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // --- Aircraft Image ---
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -189,7 +186,7 @@ fun AircraftDetails(
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        viewModel.deleteAircraft(id) // ✅ Fixed
+                        viewModel.deleteAircraft(id)
                         showDeleteConfirm = false
                         navController.navigate("home") {
                             popUpTo("home") { inclusive = true }
