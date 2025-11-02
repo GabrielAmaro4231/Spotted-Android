@@ -27,13 +27,31 @@ fun AppNavigation(navController: NavHostController) {
             HomeScreen(navController, viewModel = homeViewModel)
         }
 
+        // Regular Add screen
         composable("addAircraft") {
             AddAircraftScreen(navController, homeViewModel)
         }
 
+        // Edit mode - same screen but with editTail param
         composable(
-            route = "details/{tail}/{manufacturer}/{model}/{airportCity}/{airportIcao}/{airportIata}/{datetime}",
+            route = "addAircraft?editTail={editTail}",
             arguments = listOf(
+                navArgument("editTail") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val editTail = backStackEntry.arguments?.getString("editTail")
+            AddAircraftScreen(navController, homeViewModel, editTail)
+        }
+
+        // ✅ Details screen (now includes ID)
+        composable(
+            route = "details/{id}/{tail}/{manufacturer}/{model}/{airportCity}/{airportIcao}/{airportIata}/{datetime}",
+            arguments = listOf(
+                navArgument("id") { type = NavType.IntType },
                 navArgument("tail") { type = NavType.StringType },
                 navArgument("manufacturer") { type = NavType.StringType },
                 navArgument("model") { type = NavType.StringType },
@@ -44,23 +62,17 @@ fun AppNavigation(navController: NavHostController) {
             )
         ) { backStackEntry ->
             val args = backStackEntry.arguments!!
-            val tail = args.getString("tail") ?: ""
-            val manufacturer = args.getString("manufacturer") ?: ""
-            val model = args.getString("model") ?: ""
-            val airportCity = args.getString("airportCity") ?: ""
-            val airportIcao = args.getString("airportIcao") ?: ""
-            val airportIata = args.getString("airportIata") ?: ""
-            val datetime = args.getString("datetime") ?: ""
-
+            val id = args.getInt("id")
             AircraftDetails(
                 navController = navController,
-                tail = tail,
-                manufacturer = manufacturer,
-                model = model,
-                airportCity = airportCity,
-                airportIcao = airportIcao,
-                airportIata = airportIata,
-                datetime = datetime,
+                id = id, // ✅ Pass aircraft ID
+                tail = args.getString("tail") ?: "",
+                manufacturer = args.getString("manufacturer") ?: "",
+                model = args.getString("model") ?: "",
+                airportCity = args.getString("airportCity") ?: "",
+                airportIcao = args.getString("airportIcao") ?: "",
+                airportIata = args.getString("airportIata") ?: "",
+                datetime = args.getString("datetime") ?: "",
                 viewModel = homeViewModel
             )
         }

@@ -29,6 +29,7 @@ import com.gabrielamaro.spotted.ui.home.fetchThumbnailForTail
 @Composable
 fun AircraftDetails(
     navController: NavController,
+    id: Int, // ✅ Added ID parameter
     tail: String,
     manufacturer: String,
     model: String,
@@ -56,6 +57,15 @@ fun AircraftDetails(
         topBar = {
             TopAppBar(
                 title = { Text("Aircraft details") },
+                actions = {
+                    TextButton(
+                        onClick = {
+                            navController.navigate("addAircraft?editTail=$tail")
+                        }
+                    ) {
+                        Text("Edit")
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate("home") }) {
                         Icon(
@@ -74,7 +84,6 @@ fun AircraftDetails(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             // --- Aircraft Image ---
             Card(
                 modifier = Modifier
@@ -90,29 +99,21 @@ fun AircraftDetails(
                     contentAlignment = Alignment.Center
                 ) {
                     when {
-                        isLoading -> {
-                            CircularProgressIndicator(
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.size(32.dp),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        thumbnailUrl != null -> {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(thumbnailUrl)
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = "Aircraft thumbnail",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
-
-                        else -> {
-                            Text(text = "✈️", fontSize = 64.sp)
-                        }
+                        isLoading -> CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(32.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        thumbnailUrl != null -> AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(thumbnailUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Aircraft thumbnail",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+                        else -> Text(text = "✈️", fontSize = 64.sp)
                     }
                 }
             }
@@ -122,24 +123,7 @@ fun AircraftDetails(
             Text(text = tail, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = manufacturer,
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = model,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                    )
-                }
-            }
+            Text(text = "$manufacturer $model", fontSize = 16.sp)
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -173,23 +157,11 @@ fun AircraftDetails(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "When",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = datetime, fontSize = 14.sp)
-                Text(
-                    text = "UTC Time",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            }
+            Text(
+                text = "When: $datetime (UTC)",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -217,7 +189,7 @@ fun AircraftDetails(
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        viewModel.deleteAircraft(tail)
+                        viewModel.deleteAircraft(id) // ✅ Fixed
                         showDeleteConfirm = false
                         navController.navigate("home") {
                             popUpTo("home") { inclusive = true }

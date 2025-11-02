@@ -67,6 +67,7 @@ fun HomeScreen(
             ) {
                 items(items) { item ->
                     AircraftItem(
+                        id = item.id, // ✅ include ID
                         tail = item.tail,
                         manufacturer = item.manufacturer,
                         model = item.model,

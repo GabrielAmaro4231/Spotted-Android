@@ -1,7 +1,6 @@
 package com.gabrielamaro.spotted.ui.home
 
 import android.net.Uri
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +28,7 @@ import java.net.URL
 
 @Composable
 fun AircraftItem(
+    id: Int, // ✅ added ID
     tail: String,
     manufacturer: String,
     model: String,
@@ -93,7 +93,6 @@ fun AircraftItem(
                 }
             }
 
-
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
@@ -113,14 +112,8 @@ fun AircraftItem(
 
             IconButton(onClick = {
                 fun enc(s: String) = Uri.encode(s)
-                val route = "details/" +
-                        enc(tail) + "/" +
-                        enc(manufacturer) + "/" +
-                        enc(model) + "/" +
-                        enc(airportCity) + "/" +
-                        enc(airportIcao) + "/" +
-                        enc(airportIata) + "/" +
-                        enc(datetime)
+                // ✅ now includes ID in navigation route
+                val route = "details/${id}/${enc(tail)}/${enc(manufacturer)}/${enc(model)}/${enc(airportCity)}/${enc(airportIcao)}/${enc(airportIata)}/${enc(datetime)}"
                 navController.navigate(route)
             }) {
                 Icon(
@@ -159,4 +152,3 @@ suspend fun fetchThumbnailForTail(tail: String): String? {
         }
     }
 }
-

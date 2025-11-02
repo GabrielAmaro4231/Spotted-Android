@@ -13,12 +13,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dao = DatabaseProvider.getDatabase(application).aircraftDao()
 
-    // Flow of all aircrafts from Room
+    // Reactive list of all aircrafts
     val aircrafts = dao.getAllAircrafts()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** Insert new aircraft into Room */
-    fun addAircraft(
+    /** Add or update aircraft (using Room @Upsert) */
+    fun addOrUpdateAircraft(
+        id: Int? = null,
         tail: String,
         manufacturer: String,
         model: String,
@@ -27,7 +28,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         airportIata: String,
         datetime: String
     ) {
-        val newAircraft = AircraftEntity(
+        val aircraft = AircraftEntity(
+            id = id ?: 0, // 0 triggers insert; existing id triggers update
             tail = tail,
             manufacturer = manufacturer,
             model = model,
@@ -37,29 +39,24 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             datetime = datetime
         )
         viewModelScope.launch {
-            dao.insertAircraft(newAircraft)
+            dao.upsertAircraft(aircraft)
         }
     }
 
-    /** Delete by tail (simple example) */
-    fun deleteAircraft(tail: String) {
+    /** Delete aircraft by ID */
+    fun deleteAircraft(id: Int) {
         viewModelScope.launch {
-            val all = aircrafts.value
-            val target = all.firstOrNull { it.tail.equals(tail, ignoreCase = true) }
-            if (target != null) {
-                dao.clearAll() // optional: you can instead write a custom delete query
-                all.filterNot { it.tail.equals(tail, ignoreCase = true) }
-                    .forEach { dao.insertAircraft(it) }
-            }
+            dao.deleteById(id)
         }
     }
 
-    /** Optionally preload placeholder data on first app open */
+    /** Optionally preload data */
     fun preloadIfEmpty(defaults: List<AircraftEntity>) {
         viewModelScope.launch {
             if (aircrafts.value.isEmpty()) {
-                defaults.forEach { dao.insertAircraft(it) }
+                defaults.forEach { dao.upsertAircraft(it) }
             }
         }
     }
 }
+

@@ -8,22 +8,47 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.gabrielamaro.spotted.data.defaultManufacturers
 import com.gabrielamaro.spotted.data.defaultAirports
+import com.gabrielamaro.spotted.ui.home.HomeViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.gabrielamaro.spotted.ui.home.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
+fun AddAircraftScreen(
+    navController: NavController,
+    viewModel: HomeViewModel,
+    editTail: String? = null // optional parameter for editing
+) {
+    val items by viewModel.aircrafts.collectAsState()
+    val isEditMode = editTail != null
+
+    // find existing aircraft
+    val existingAircraft = remember(editTail, items) {
+        editTail?.let { tail ->
+            items.firstOrNull { it.tail.equals(tail, ignoreCase = true) }
+        }
+    }
+
     var selectedManufacturer by remember { mutableStateOf("") }
     var selectedModel by remember { mutableStateOf("") }
     var selectedAirport by remember { mutableStateOf("") }
     var registration by remember { mutableStateOf("") }
 
-    val availableModels = defaultManufacturers.find { it.name == selectedManufacturer }?.models ?: emptyList()
+    // preload existing data if editing
+    LaunchedEffect(existingAircraft) {
+        existingAircraft?.let { a ->
+            selectedManufacturer = a.manufacturer
+            selectedModel = a.model
+            selectedAirport = "${a.airportCity} (${a.airportIcao} - ${a.airportIata})"
+            registration = a.tail
+        }
+    }
+
+    val availableModels =
+        defaultManufacturers.find { it.name == selectedManufacturer }?.models ?: emptyList()
 
     val currentDate = remember {
         val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
@@ -33,7 +58,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add New Aircraft") },
+                title = { Text(if (isEditMode) "Edit Aircraft" else "Add New Aircraft") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -78,16 +103,9 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 value = registration,
                 onValueChange = { registration = it },
                 label = { Text("Aircraft Registration") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isEditMode
             )
-
-//            OutlinedTextField(
-//                value = "Image picker coming soon...",
-//                onValueChange = {},
-//                label = { Text("Photo") },
-//                readOnly = true,
-//                modifier = Modifier.fillMaxWidth()
-//            )
 
             Button(
                 onClick = {
@@ -105,17 +123,19 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                         val iata = airportParts.getOrNull(1)?.trim() ?: ""
                         val city = selectedAirport.substringBefore(" (")
 
-                        viewModel.addAircraft(
+                        viewModel.addOrUpdateAircraft(
+                            id = existingAircraft?.id, // preserve ID for editing
                             tail = registration,
                             manufacturer = selectedManufacturer,
                             model = selectedModel,
                             airportCity = city,
                             airportIcao = icao,
                             airportIata = iata,
-                            datetime = currentDate
+                            datetime = existingAircraft?.datetime ?: currentDate
                         )
 
-                        navController.popBackStack()
+                        // ✅ Always return to Home screen after saving
+                        navController.popBackStack("home", inclusive = false)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -124,7 +144,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                         selectedAirport.isNotEmpty() &&
                         registration.isNotEmpty()
             ) {
-                Text("Add Aircraft")
+                Text(if (isEditMode) "Save Changes" else "Add Aircraft")
             }
         }
     }
