@@ -12,7 +12,7 @@ import com.gabrielamaro.spotted.data.supabase
 import com.gabrielamaro.spotted.ui.home.HomeViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import io.github.jan.supabase.postgrest.from
 import kotlinx.serialization.Serializable
 
@@ -77,7 +77,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 title = { Text("Add Aircraft") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -112,7 +112,10 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                     onValueChange = { airportSearchText = it },
                     label = { Text("Select Airport") },
                     modifier = Modifier
-                        .menuAnchor()
+                        .menuAnchor(
+                            type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                            enabled = true
+                        )
                         .fillMaxWidth(),
                     singleLine = true,
                     trailingIcon = {
