@@ -1,7 +1,9 @@
 package com.gabrielamaro.spotted.ui.home
 
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +20,24 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+
+// ---------------------------------------------
+// Date formatting helper
+// ---------------------------------------------
+@RequiresApi(Build.VERSION_CODES.O)
+fun formatDate(dateString: String?): String {
+    if (dateString.isNullOrBlank()) return "No date"
+
+    return try {
+        val parsed = OffsetDateTime.parse(dateString)
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm")
+        parsed.format(formatter)
+    } catch (e: Exception) {
+        dateString // fallback
+    }
+}
 
 // ---------------------------------------------
 // Data classes
@@ -53,6 +73,7 @@ data class FullPost(
 // Home Screen
 // ---------------------------------------------
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
@@ -76,7 +97,7 @@ fun HomeScreen(navController: NavController) {
                 // 3. Create lookup map
                 val airportMap = airports.associateBy { it.id }
 
-                // 4. Merge posts with their airports
+                // 4. Merge
                 posts = rawPosts.map { post ->
                     val airport = airportMap[post.airport_id]
                     FullPost(post, airport)
@@ -121,6 +142,7 @@ fun HomeScreen(navController: NavController) {
 // UI for each post
 // ---------------------------------------------
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PostItem(fullPost: FullPost) {
     val post = fullPost.post
@@ -145,15 +167,15 @@ fun PostItem(fullPost: FullPost) {
             // Line 2 — Airport
             Text(
                 text = "${airport?.airport_name ?: "Unknown Airport"} " +
-                       "(${airport?.airport_icao ?: "----"} - ${airport?.airport_iata ?: "--"})",
+                        "(${airport?.airport_icao ?: "----"} - ${airport?.airport_iata ?: "--"})",
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Line 3 — Created date
+            // Line 3 — Formatted date
             Text(
-                text = post.created_at ?: "No date",
+                text = formatDate(post.created_at),
                 style = MaterialTheme.typography.bodySmall
             )
         }
