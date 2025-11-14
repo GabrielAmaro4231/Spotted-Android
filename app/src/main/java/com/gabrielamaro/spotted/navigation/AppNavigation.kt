@@ -24,7 +24,7 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable("home") {
-            HomeScreen(navController, viewModel = homeViewModel)
+            HomeScreen(navController)
         }
 
         composable("addAircraft") {

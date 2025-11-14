@@ -1,39 +1,80 @@
 package com.gabrielamaro.spotted.ui.add
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.gabrielamaro.spotted.data.defaultManufacturers
-import com.gabrielamaro.spotted.data.defaultAirports
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.gabrielamaro.spotted.data.supabase
+import com.gabrielamaro.spotted.ui.home.HomeViewModel
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import com.gabrielamaro.spotted.ui.home.HomeViewModel
+import io.github.jan.supabase.postgrest.from
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Airport(
+    val id: Long? = null,
+    val created_at: String? = null,
+    val airport_name: String,
+    val airport_icao: String,
+    val airport_iata: String? = null,
+    val airport_city: String? = null
+)
+
+@Serializable
+data class PostInsert(
+    val aircraft_prefix: String,
+    val airport_id: Long
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
-    var selectedManufacturer by remember { mutableStateOf("") }
-    var selectedModel by remember { mutableStateOf("") }
-    var selectedAirport by remember { mutableStateOf("") }
-    var registration by remember { mutableStateOf("") }
 
-    val availableModels = defaultManufacturers.find { it.name == selectedManufacturer }?.models ?: emptyList()
+    var prefix by remember { mutableStateOf("") }
 
-    val currentDate = remember {
-        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-        formatter.format(Date())
+    // Airport selector state
+    var airportList by remember { mutableStateOf<List<Airport>>(emptyList()) }
+    var airportMenuExpanded by remember { mutableStateOf(false) }
+    var selectedAirport by remember { mutableStateOf<Airport?>(null) }
+    var airportSearchText by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Fetch airports
+    LaunchedEffect(Unit) {
+        scope.launch {
+            try {
+                val response = supabase.from("airport_list").select()
+                airportList = response.decodeList<Airport>()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to fetch airports: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    // Filtering logic
+    val filteredAirports = remember(airportSearchText, airportList) {
+        val q = airportSearchText.lowercase().trim()
+        if (q.isBlank()) airportList
+        else airportList.filter { airport ->
+            airport.airport_name.lowercase().contains(q) ||
+                    (airport.airport_city?.lowercase()?.contains(q) == true) ||
+                    airport.airport_icao.lowercase().contains(q) ||
+                    (airport.airport_iata?.lowercase()?.contains(q) == true)
+        }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add New Aircraft") },
+                title = { Text("Add Aircraft") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -42,134 +83,108 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
             )
         }
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            DropdownMenuBox(
-                items = defaultManufacturers.map { it.name },
-                selectedItem = selectedManufacturer,
-                onItemSelected = {
-                    selectedManufacturer = it
-                    selectedModel = ""
-                },
-                placeholder = "Select Manufacturer"
-            )
-
-            DropdownMenuBox(
-                items = availableModels,
-                selectedItem = selectedModel,
-                onItemSelected = { selectedModel = it },
-                placeholder = "Select Model",
-                enabled = selectedManufacturer.isNotEmpty()
-            )
-
-            DropdownMenuBox(
-                items = defaultAirports.map { "${it.city} (${it.icao} - ${it.iata})" },
-                selectedItem = selectedAirport,
-                onItemSelected = { selectedAirport = it },
-                placeholder = "Select Airport"
-            )
 
             OutlinedTextField(
-                value = registration,
-                onValueChange = { registration = it },
-                label = { Text("Aircraft Registration") },
+                value = prefix,
+                onValueChange = { prefix = it.uppercase() },
+                label = { Text("Aircraft Prefix (e.g. PR-ABC)") },
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // ===============================
+            // Smooth Searchable Airport Selector
+            // ===============================
+            ExposedDropdownMenuBox(
+                expanded = airportMenuExpanded,
+                onExpandedChange = { airportMenuExpanded = it }
+            ) {
+
+                OutlinedTextField(
+                    value = airportSearchText,
+                    onValueChange = { airportSearchText = it },
+                    label = { Text("Select Airport") },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    singleLine = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = airportMenuExpanded)
+                    },
+                    readOnly = false
+                )
+
+                ExposedDropdownMenu(
+                    expanded = airportMenuExpanded,
+                    onDismissRequest = { airportMenuExpanded = false }
+                ) {
+
+                    if (filteredAirports.isEmpty()) {
+                        DropdownMenuItem(
+                            text = { Text("No matching airports") },
+                            onClick = {}
+                        )
+                    } else {
+                        filteredAirports.forEach { airport ->
+                            DropdownMenuItem(
+                                text = { Text("${airport.airport_name} (${airport.airport_icao})") },
+                                onClick = {
+                                    selectedAirport = airport
+                                    airportSearchText =
+                                        "${airport.airport_name} (${airport.airport_icao})"
+                                    airportMenuExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Disabled photo picker placeholder
             OutlinedTextField(
                 value = "Image picker coming soon...",
                 onValueChange = {},
+                enabled = false,
                 label = { Text("Photo") },
-                readOnly = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // ===============================
+            // Insert into posts table
+            // ===============================
             Button(
                 onClick = {
-                    if (selectedManufacturer.isNotEmpty() &&
-                        selectedModel.isNotEmpty() &&
-                        selectedAirport.isNotEmpty() &&
-                        registration.isNotEmpty()
-                    ) {
-                        val airportParts = selectedAirport
-                            .substringAfter("(")
-                            .substringBefore(")")
-                            .split(" - ")
+                    val aircraftPrefix = prefix.trim()
+                    val airportId = selectedAirport?.id ?: return@Button
 
-                        val icao = airportParts.getOrNull(0)?.trim() ?: ""
-                        val iata = airportParts.getOrNull(1)?.trim() ?: ""
-                        val city = selectedAirport.substringBefore(" (")
+                    scope.launch {
+                        try {
+                            supabase.from("posts").insert(
+                                PostInsert(
+                                    aircraft_prefix = aircraftPrefix,
+                                    airport_id = airportId
+                                )
+                            )
 
-                        viewModel.addAircraft(
-                            tail = registration,
-                            manufacturer = selectedManufacturer,
-                            model = selectedModel,
-                            airportCity = city,
-                            airportIcao = icao,
-                            airportIata = iata,
-                            datetime = currentDate
-                        )
+                            Toast.makeText(context, "Aircraft added!", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack()
 
-                        navController.popBackStack()
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = selectedManufacturer.isNotEmpty() &&
-                        selectedModel.isNotEmpty() &&
-                        selectedAirport.isNotEmpty() &&
-                        registration.isNotEmpty()
+                enabled = prefix.isNotBlank() && selectedAirport != null,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Add Aircraft")
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DropdownMenuBox(
-    items: List<String>,
-    selectedItem: String,
-    onItemSelected: (String) -> Unit,
-    placeholder: String,
-    enabled: Boolean = true
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { if (enabled) expanded = !expanded }
-    ) {
-        OutlinedTextField(
-            value = selectedItem,
-            onValueChange = {},
-            label = { Text(placeholder) },
-            readOnly = true,
-            enabled = enabled,
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth()
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            items.forEach { item ->
-                DropdownMenuItem(
-                    text = { Text(item) },
-                    onClick = {
-                        onItemSelected(item)
-                        expanded = false
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                )
             }
         }
     }

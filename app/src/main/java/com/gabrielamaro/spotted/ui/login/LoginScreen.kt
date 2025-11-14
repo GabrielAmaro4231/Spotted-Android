@@ -47,28 +47,8 @@ fun LoginScreen(onLoginClick: () -> Unit) {
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(24.dp))
-        InsertButton()
         GoogleSignInButton(onLoginSuccess = onLoginClick)
         Spacer(modifier = Modifier.height(12.dp))
-    }
-}
-
-@Composable
-fun InsertButton() {
-    val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
-
-    Button(onClick = {
-        coroutineScope.launch {
-            try {
-                supabase.from("posts").insert(mapOf("content" to "Hello from Android"))
-                Toast.makeText(context, "New Row Inserted", Toast.LENGTH_SHORT).show()
-            } catch (e: RestException) {
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-            }
-        }
-    }) {
-        Text("Insert a new row")
     }
 }
 
