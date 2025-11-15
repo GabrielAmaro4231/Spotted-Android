@@ -1,40 +1,21 @@
 package com.gabrielamaro.spotted.ui.home
 
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.gabrielamaro.spotted.data.AircraftPlaceholder
-import com.gabrielamaro.spotted.data.aircraftPlaceholders
+import com.gabrielamaro.spotted.model.FullPost
 
 class HomeViewModel : ViewModel() {
 
-    private val _aircrafts = mutableStateListOf<AircraftPlaceholder>().apply {
-        addAll(aircraftPlaceholders)
-    }
+    // ---------------------------------------------------------
+    // SELECTED POST TO VIEW / EDIT INSIDE AddAircraftScreen
+    // ---------------------------------------------------------
+    var selectedPost by mutableStateOf<FullPost?>(null)
+        private set
 
-    val aircrafts: List<AircraftPlaceholder> get() = _aircrafts
-
-    fun addAircraft(
-        tail: String,
-        manufacturer: String,
-        model: String,
-        airportCity: String,
-        airportIcao: String,
-        airportIata: String,
-        datetime: String
-    ) {
-        val newAircraft = AircraftPlaceholder(
-            tail = tail,
-            manufacturer = manufacturer,
-            model = model,
-            airportCity = airportCity,
-            airportIcao = airportIcao,
-            airportIata = airportIata,
-            datetime = datetime
-        )
-        _aircrafts.add(0, newAircraft)
-    }
-
-    fun deleteAircraft(tail: String) {
-        _aircrafts.removeAll { it.tail.equals(tail, ignoreCase = true) }
+    // Renamed to avoid JVM signature clash
+    fun updateSelectedPost(post: FullPost?) {
+        selectedPost = post
     }
 }

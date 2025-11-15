@@ -1,5 +1,10 @@
 package com.gabrielamaro.spotted.model
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 // -------------------------------------------------------------
@@ -33,7 +38,7 @@ data class Post(
 
     val airport_id: Int? = null,
 
-    // ✅ NEW FIELD (text)
+    // DB field storing the path to the uploaded storage image
     val image_path: String? = null
 )
 
@@ -49,7 +54,7 @@ data class PostInsert(
 
     val content: String = "",
 
-    // ✅ NEW FIELD (nullable because user may not upload a photo)
+    // Nullable because user may not upload an image
     val image_path: String? = null
 )
 
@@ -60,3 +65,22 @@ data class FullPost(
     val post: Post,
     val airport: Airport?
 )
+
+
+// =================================================================
+// HOME VIEW MODEL (added here exactly as you requested)
+// =================================================================
+
+class HomeViewModel : ViewModel() {
+
+    // Holds currently selected post for AddAircraftScreen (view/edit mode)
+    private val _selectedPost = MutableStateFlow<FullPost?>(null)
+    val selectedPost: StateFlow<FullPost?> = _selectedPost
+
+    // Called when clicking a post (view mode) or FAB (create mode)
+    fun setSelectedPost(post: FullPost?) {
+        viewModelScope.launch {
+            _selectedPost.emit(post)
+        }
+    }
+}
