@@ -22,7 +22,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.net.URL
 
-// ✔️ IMPORT MODELS FROM YOUR MODELS.KT
 import com.gabrielamaro.spotted.model.Airport
 import com.gabrielamaro.spotted.model.PostInsert
 
@@ -44,9 +43,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // ---------------------------------------------------------
-    // SERVER-SIDE SEARCH (correct version using filter builder)
-    // ---------------------------------------------------------
     fun performAirportSearch(query: String) {
         searchJob?.cancel()
         searchJob = scope.launch {
@@ -100,9 +96,9 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
-            // ---------------------------------------------------------
+            // --------------------------
             // Aircraft Prefix
-            // ---------------------------------------------------------
+            // --------------------------
             Column {
                 OutlinedTextField(
                     value = prefix,
@@ -126,20 +122,21 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
             }
 
             // ---------------------------------------------------------
-            // AIRPORT DROPDOWN SEARCH
+            // Airport search dropdown
             // ---------------------------------------------------------
             ExposedDropdownMenuBox(
                 expanded = airportMenuExpanded,
-                onExpandedChange = { airportMenuExpanded = it }
+                onExpandedChange = {
+                    airportMenuExpanded = it
+                    if (it) performAirportSearch(airportSearchText)
+                }
             ) {
 
                 OutlinedTextField(
                     value = airportSearchText,
                     onValueChange = { text ->
                         airportSearchText = text
-                        airportMenuExpanded = true
                         selectedAirport = null
-                        performAirportSearch(text)
                     },
                     label = { Text("Select Airport") },
                     modifier = Modifier
@@ -179,9 +176,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 }
             }
 
-            // ---------------------------------------------------------
             // Placeholder image picker
-            // ---------------------------------------------------------
             OutlinedTextField(
                 value = "Image picker coming soon...",
                 onValueChange = {},
@@ -190,9 +185,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // ---------------------------------------------------------
-            // Add Button (with API + DB insert)
-            // ---------------------------------------------------------
+            // Add button
             Button(
                 onClick = {
                     val pfx = prefix.trim()
@@ -203,7 +196,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
                     scope.launch {
                         try {
-
                             val url = "https://www.jetapi.dev/api?reg=$pfx&photos=0&flights=0"
 
                             val jsonText = withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -213,7 +205,9 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                             val json = Json.parseToJsonElement(jsonText).jsonObject
 
                             val flightRadarElement = json["FlightRadar"]
-                            if (flightRadarElement == null || flightRadarElement.toString() == "null") {
+
+                            if (flightRadarElement == null || flightRadarElement.toString() == "null" ||
+                                flightRadarElement.toString() == "[]") {
                                 prefixError = "No aircraft found with this prefix."
                                 loading = false
                                 return@launch
@@ -222,17 +216,23 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                             val model =
                                 flightRadarElement.jsonObject["Aircraft"]?.jsonPrimitive?.content
 
+                            val airline =
+                                flightRadarElement.jsonObject["Airline"]?.jsonPrimitive?.content
+
                             if (model.isNullOrBlank()) {
                                 prefixError = "No aircraft model information available."
                                 loading = false
                                 return@launch
                             }
 
-                            // INSERT INTO posts
+                            // -------------------------------------------------
+                            // INSERT NEW FIELD: aircraft_airline = airline
+                            // -------------------------------------------------
                             supabase.from("posts").insert(
                                 PostInsert(
                                     aircraft_prefix = pfx,
                                     aircraft_model = model,
+                                    aircraft_airline = airline ?: "",
                                     airport_id = airportId,
                                     content = ""
                                 )

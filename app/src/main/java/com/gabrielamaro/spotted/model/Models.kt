@@ -29,6 +29,7 @@ data class Post(
 
     val aircraft_prefix: String? = null,
     val aircraft_model: String? = null,
+    val aircraft_airline: String? = null,   // ✅ NEW FIELD
 
     val airport_id: Int? = null
 )
@@ -40,9 +41,9 @@ data class Post(
 data class PostInsert(
     val aircraft_prefix: String,
     val aircraft_model: String,
-    val airport_id: Int,          // <-- CHANGED TO INT
+    val aircraft_airline: String,   // ✅ NEW FIELD
+    val airport_id: Int,
 
-    // Keep content nullable or default to empty string
     val content: String = ""
 )
 
