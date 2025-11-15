@@ -14,30 +14,17 @@ import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.net.URL
 
-@Serializable
-data class Airport(
-    val id: Long? = null,
-    val created_at: String? = null,
-    val airport_name: String,
-    val airport_icao: String,
-    val airport_iata: String? = null,
-    val airport_city: String? = null
-)
-
-@Serializable
-data class PostInsert(
-    val aircraft_prefix: String,
-    val aircraft_model: String,
-    val airport_id: Long,
-    val content: String = ""
-)
+// ✔️ IMPORT MODELS FROM YOUR MODELS.KT
+import com.gabrielamaro.spotted.model.Airport
+import com.gabrielamaro.spotted.model.PostInsert
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,35 +33,49 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
     var prefix by remember { mutableStateOf("") }
     var prefixError by remember { mutableStateOf<String?>(null) }
 
-    var airportList by remember { mutableStateOf<List<Airport>>(emptyList()) }
+    var airportResults by remember { mutableStateOf<List<Airport>>(emptyList()) }
     var airportMenuExpanded by remember { mutableStateOf(false) }
     var selectedAirport by remember { mutableStateOf<Airport?>(null) }
     var airportSearchText by remember { mutableStateOf("") }
+    var searchJob by remember { mutableStateOf<Job?>(null) }
 
     var loading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        scope.launch {
-            try {
-                val response = supabase.from("airport_list").select()
-                airportList = response.decodeList<Airport>()
-            } catch (e: Exception) {
-                Toast.makeText(context, "Failed to fetch airports: ${e.message}", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
+    // ---------------------------------------------------------
+    // SERVER-SIDE SEARCH (correct version using filter builder)
+    // ---------------------------------------------------------
+    fun performAirportSearch(query: String) {
+        searchJob?.cancel()
+        searchJob = scope.launch {
+            delay(250)
 
-    val filteredAirports = remember(airportSearchText, airportList) {
-        val q = airportSearchText.lowercase().trim()
-        if (q.isBlank()) airportList
-        else airportList.filter { airport ->
-            airport.airport_name.lowercase().contains(q) ||
-                    (airport.airport_city?.lowercase()?.contains(q) == true) ||
-                    airport.airport_icao.lowercase().contains(q) ||
-                    (airport.airport_iata?.lowercase()?.contains(q) == true)
+            val q = query.trim()
+            if (q.length < 2) {
+                airportResults = emptyList()
+                return@launch
+            }
+
+            try {
+                val response = supabase.from("airport_list").select {
+                    filter {
+                        or {
+                            ilike("airport_name", "%$q%")
+                            ilike("airport_icao", "%$q%")
+                            ilike("airport_iata", "%$q%")
+                            ilike("airport_city", "%$q%")
+                        }
+                    }
+                    limit(20)
+                }
+
+                airportResults = response.decodeList<Airport>()
+
+            } catch (e: Exception) {
+                airportResults = emptyList()
+            }
         }
     }
 
@@ -99,6 +100,9 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
+            // ---------------------------------------------------------
+            // Aircraft Prefix
+            // ---------------------------------------------------------
             Column {
                 OutlinedTextField(
                     value = prefix,
@@ -121,6 +125,9 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 }
             }
 
+            // ---------------------------------------------------------
+            // AIRPORT DROPDOWN SEARCH
+            // ---------------------------------------------------------
             ExposedDropdownMenuBox(
                 expanded = airportMenuExpanded,
                 onExpandedChange = { airportMenuExpanded = it }
@@ -128,19 +135,20 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
                 OutlinedTextField(
                     value = airportSearchText,
-                    onValueChange = { airportSearchText = it },
+                    onValueChange = { text ->
+                        airportSearchText = text
+                        airportMenuExpanded = true
+                        selectedAirport = null
+                        performAirportSearch(text)
+                    },
                     label = { Text("Select Airport") },
                     modifier = Modifier
-                        .menuAnchor(
-                            type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
-                            enabled = true
-                        )
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                         .fillMaxWidth(),
                     singleLine = true,
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = airportMenuExpanded)
-                    },
-                    readOnly = false
+                    }
                 )
 
                 ExposedDropdownMenu(
@@ -148,15 +156,17 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                     onDismissRequest = { airportMenuExpanded = false }
                 ) {
 
-                    if (filteredAirports.isEmpty()) {
+                    if (airportResults.isEmpty()) {
                         DropdownMenuItem(
                             text = { Text("No matching airports") },
                             onClick = {}
                         )
                     } else {
-                        filteredAirports.forEach { airport ->
+                        airportResults.forEach { airport ->
                             DropdownMenuItem(
-                                text = { Text("${airport.airport_name} (${airport.airport_icao})") },
+                                text = {
+                                    Text("${airport.airport_name} (${airport.airport_icao})")
+                                },
                                 onClick = {
                                     selectedAirport = airport
                                     airportSearchText =
@@ -169,6 +179,9 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 }
             }
 
+            // ---------------------------------------------------------
+            // Placeholder image picker
+            // ---------------------------------------------------------
             OutlinedTextField(
                 value = "Image picker coming soon...",
                 onValueChange = {},
@@ -177,9 +190,12 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // ---------------------------------------------------------
+            // Add Button (with API + DB insert)
+            // ---------------------------------------------------------
             Button(
                 onClick = {
-                    val aircraftPrefix = prefix.trim()
+                    val pfx = prefix.trim()
                     val airportId = selectedAirport?.id ?: return@Button
 
                     loading = true
@@ -187,16 +203,14 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
                     scope.launch {
                         try {
-                            val url =
-                                "https://www.jetapi.dev/api?reg=$aircraftPrefix&photos=0&flights=0"
+
+                            val url = "https://www.jetapi.dev/api?reg=$pfx&photos=0&flights=0"
 
                             val jsonText = withContext(kotlinx.coroutines.Dispatchers.IO) {
                                 URL(url).readText()
                             }
 
                             val json = Json.parseToJsonElement(jsonText).jsonObject
-
-                            android.util.Log.d("AddAircraft", "JetAPI raw: $jsonText")
 
                             val flightRadarElement = json["FlightRadar"]
                             if (flightRadarElement == null || flightRadarElement.toString() == "null") {
@@ -207,59 +221,28 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
                             val model =
                                 flightRadarElement.jsonObject["Aircraft"]?.jsonPrimitive?.content
+
                             if (model.isNullOrBlank()) {
                                 prefixError = "No aircraft model information available."
                                 loading = false
                                 return@launch
                             }
 
-                            android.util.Log.d("AddAircraft", "Extracted model: $model")
-
-                            try {
-                                supabase.from("posts").insert(
-                                    PostInsert(
-                                        aircraft_prefix = aircraftPrefix,
-                                        aircraft_model = model,
-                                        airport_id = airportId,
-                                        content = ""
-                                    )
+                            // INSERT INTO posts
+                            supabase.from("posts").insert(
+                                PostInsert(
+                                    aircraft_prefix = pfx,
+                                    aircraft_model = model,
+                                    airport_id = airportId,
+                                    content = ""
                                 )
+                            )
 
-                                Toast.makeText(context, "Aircraft added!", Toast.LENGTH_SHORT)
-                                    .show()
-                                navController.popBackStack()
-
-                            } catch (dbEx: Exception) {
-
-                                val msg = dbEx.message ?: ""
-
-                                android.util.Log.e("AddAircraft", "Supabase insert error", dbEx)
-
-                                val isDuplicate =
-                                    msg.contains("duplicate key value", ignoreCase = true) ||
-                                            msg.contains("unique constraint", ignoreCase = true)
-
-                                if (isDuplicate) {
-                                    prefixError =
-                                        "This aircraft has already been added to Spotted."
-                                } else {
-                                    prefixError =
-                                        "Database insert failed: ${dbEx.message ?: "see log"}"
-                                    Toast.makeText(
-                                        context,
-                                        "DB insert error: ${dbEx.message}",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
+                            Toast.makeText(context, "Aircraft added!", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack()
 
                         } catch (e: Exception) {
-                            android.util.Log.e("AddAircraft", "General error", e)
-                            Toast.makeText(
-                                context,
-                                "Error: ${e.message ?: e}",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            prefixError = "Insert failed: ${e.message}"
                         } finally {
                             loading = false
                         }

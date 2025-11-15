@@ -16,10 +16,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.gabrielamaro.spotted.data.supabase
+import com.gabrielamaro.spotted.model.Airport
+import com.gabrielamaro.spotted.model.Post
+import com.gabrielamaro.spotted.model.FullPost
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
@@ -40,36 +43,6 @@ fun formatDate(dateString: String?): String {
 }
 
 // ---------------------------------------------
-// Data classes
-// ---------------------------------------------
-
-@Serializable
-data class Post(
-    val id: Long? = null,
-    val created_at: String? = null,
-    val content: String? = null,
-    val user_id: String? = null,
-
-    val aircraft_prefix: String? = null,
-    val aircraft_model: String? = null,
-
-    val airport_id: Long? = null
-)
-
-@Serializable
-data class Airport(
-    val id: Long? = null,
-    val airport_name: String? = null,
-    val airport_icao: String? = null,
-    val airport_iata: String? = null
-)
-
-data class FullPost(
-    val post: Post,
-    val airport: Airport?
-)
-
-// ---------------------------------------------
 // Home Screen
 // ---------------------------------------------
 
@@ -82,26 +55,81 @@ fun HomeScreen(navController: NavController) {
 
     var posts by remember { mutableStateOf<List<FullPost>>(emptyList()) }
 
-    // Fetch both tables at once, then merge
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             try {
-                // 1. Fetch all posts
-                val postsResult = supabase.from("posts").select()
+                Log.d("HOME_DEBUG", "Fetching posts...")
+
+                // 1. Fetch posts (explicitly request all columns)
+                val postsResult = supabase.from("posts").select(Columns.ALL)
                 val rawPosts = postsResult.decodeList<Post>()
 
-                // 2. Fetch all airports
-                val airportsResult = supabase.from("airport_list").select()
-                val airports = airportsResult.decodeList<Airport>()
+                Log.d("HOME_DEBUG", "POSTS FETCHED (${rawPosts.size}):")
+                rawPosts.forEach {
+                    Log.d(
+                        "HOME_DEBUG",
+                        "POST id=${it.id}, airport_id=${it.airport_id}, prefix=${it.aircraft_prefix}"
+                    )
+                }
+
+                // Collect distinct airport IDs referenced by posts
+                val airportIds: List<Int> = rawPosts
+                    .mapNotNull { it.airport_id }
+                    .distinct()
+
+                Log.d("HOME_DEBUG", "Distinct airport IDs referenced: $airportIds")
+
+                val airports: List<Airport> = if (airportIds.isNotEmpty()) {
+                    Log.d("HOME_DEBUG", "Fetching only referenced airports via IN query...")
+
+                    // Fetch only the airports matching the post airport_ids
+                    val airportsJson = supabase.from("airport_list")
+                        .select(columns = Columns.ALL) {
+                            filter {
+                                isIn("id", airportIds)
+                            }
+                        }
+
+                    // Decode
+                    val decoded = airportsJson.decodeList<Airport>()
+
+                    // Debug logs
+                    Log.d("HOME_DEBUG", "AIRPORTS FETCHED (${decoded.size}):")
+                    decoded.forEach { a ->
+                        Log.d(
+                            "HOME_DEBUG",
+                            "AIRPORT id=${a.id}, icao=${a.airport_icao}, name=${a.airport_name}"
+                        )
+                    }
+
+                    decoded // <-- THIS is the return value of the IF block
+
+                } else {
+                    Log.d("HOME_DEBUG", "No airport IDs found in posts; skipping airport query.")
+                    emptyList()
+                }
 
                 // 3. Create lookup map
                 val airportMap = airports.associateBy { it.id }
 
-                // 4. Merge
+                Log.d("HOME_DEBUG", "Merging posts with airport data...")
+
+                // 4. Merge posts + airport data
                 posts = rawPosts.map { post ->
                     val airport = airportMap[post.airport_id]
-                    FullPost(post, airport)
+
+                    Log.d(
+                        "HOME_DEBUG",
+                        "MATCH post_id=${post.id} airport_id=${post.airport_id} -> airport_found=${airport != null}"
+                    )
+
+                    FullPost(
+                        post = post,
+                        airport = airport
+                    )
                 }
+
+                Log.d("HOME_DEBUG", "Merge complete. Total merged posts: ${posts.size}")
 
             } catch (e: Exception) {
                 Log.e("HomeScreen", "Fetch error", e)
