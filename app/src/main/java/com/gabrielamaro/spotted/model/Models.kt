@@ -3,7 +3,7 @@ package com.gabrielamaro.spotted.model
 import kotlinx.serialization.Serializable
 
 // -------------------------------------------------------------
-// AIRPORT MODEL (Matches the airport_list table exactly)
+// AIRPORT MODEL
 // -------------------------------------------------------------
 @Serializable
 data class Airport(
@@ -29,9 +29,12 @@ data class Post(
 
     val aircraft_prefix: String? = null,
     val aircraft_model: String? = null,
-    val aircraft_airline: String? = null,   // ✅ NEW FIELD
+    val aircraft_airline: String? = null,
 
-    val airport_id: Int? = null
+    val airport_id: Int? = null,
+
+    // ✅ NEW FIELD (text)
+    val image_path: String? = null
 )
 
 // -------------------------------------------------------------
@@ -41,10 +44,13 @@ data class Post(
 data class PostInsert(
     val aircraft_prefix: String,
     val aircraft_model: String,
-    val aircraft_airline: String,   // ✅ NEW FIELD
+    val aircraft_airline: String,
     val airport_id: Int,
 
-    val content: String = ""
+    val content: String = "",
+
+    // ✅ NEW FIELD (nullable because user may not upload a photo)
+    val image_path: String? = null
 )
 
 // -------------------------------------------------------------

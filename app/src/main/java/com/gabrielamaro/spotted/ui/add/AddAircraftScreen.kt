@@ -1,6 +1,11 @@
 package com.gabrielamaro.spotted.ui.add
 
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -8,18 +13,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.gabrielamaro.spotted.data.supabase
 import com.gabrielamaro.spotted.ui.home.HomeViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import java.io.InputStream
 import java.net.URL
 
 import com.gabrielamaro.spotted.model.Airport
@@ -40,8 +48,18 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
     var loading by remember { mutableStateOf(false) }
 
+    // Image picker
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    // Launcher for picking gallery image
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
 
     fun performAirportSearch(query: String) {
         searchJob?.cancel()
@@ -96,9 +114,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
-            // --------------------------
             // Aircraft Prefix
-            // --------------------------
             Column {
                 OutlinedTextField(
                     value = prefix,
@@ -121,9 +137,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 }
             }
 
-            // ---------------------------------------------------------
             // Airport search dropdown
-            // ---------------------------------------------------------
             ExposedDropdownMenuBox(
                 expanded = airportMenuExpanded,
                 onExpandedChange = {
@@ -176,14 +190,24 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 }
             }
 
-            // Placeholder image picker
-            OutlinedTextField(
-                value = "Image picker coming soon...",
-                onValueChange = {},
-                enabled = false,
-                label = { Text("Photo") },
+            // Image picker button
+            Button(
+                onClick = { imagePickerLauncher.launch("image/*") },
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) {
+                Text("Pick Photo")
+            }
+
+            // Display preview
+            selectedImageUri?.let { uri ->
+                Image(
+                    painter = rememberAsyncImagePainter(uri),
+                    contentDescription = "Selected Image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+            }
 
             // Add button
             Button(
@@ -196,6 +220,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
                     scope.launch {
                         try {
+                            // JetAPI lookup
                             val url = "https://www.jetapi.dev/api?reg=$pfx&photos=0&flights=0"
 
                             val jsonText = withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -206,8 +231,10 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
                             val flightRadarElement = json["FlightRadar"]
 
-                            if (flightRadarElement == null || flightRadarElement.toString() == "null" ||
-                                flightRadarElement.toString() == "[]") {
+                            if (flightRadarElement == null ||
+                                flightRadarElement.toString() == "null" ||
+                                flightRadarElement.toString() == "[]"
+                            ) {
                                 prefixError = "No aircraft found with this prefix."
                                 loading = false
                                 return@launch
@@ -226,7 +253,45 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                             }
 
                             // -------------------------------------------------
-                            // INSERT NEW FIELD: aircraft_airline = airline
+                            // IMAGE UPLOAD (NOW SAVES FULL PUBLIC URL)
+                            // -------------------------------------------------
+                            var uploadedImagePath: String? = null
+
+                            if (selectedImageUri != null) {
+                                try {
+                                    val inputStream: InputStream? =
+                                        context.contentResolver.openInputStream(selectedImageUri!!)
+                                    val bytes = inputStream?.readBytes()
+
+                                    if (bytes != null) {
+                                        val filename = "aircraft_${System.currentTimeMillis()}.jpg"
+                                        val folder = "aircraft_photos"
+                                        val path = "$folder/$filename"
+
+                                        supabase.storage.from("aircraft-photos")
+                                            .upload(path, bytes)
+
+                                        // Build the full PUBLIC URL
+                                        val projectId =
+                                            supabase.supabaseUrl.substringAfter("https://")
+                                                .substringBefore(".supabase.co")
+
+                                        val publicUrl =
+                                            "https://$projectId.supabase.co/storage/v1/object/public/aircraft-photos/$path"
+
+                                        uploadedImagePath = publicUrl
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(
+                                        context,
+                                        "Image upload failed: ${e.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+
+                            // -------------------------------------------------
+                            // INSERT POST WITH FULL PUBLIC IMAGE URL
                             // -------------------------------------------------
                             supabase.from("posts").insert(
                                 PostInsert(
@@ -234,7 +299,8 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                                     aircraft_model = model,
                                     aircraft_airline = airline ?: "",
                                     airport_id = airportId,
-                                    content = ""
+                                    content = "",
+                                    image_path = uploadedImagePath
                                 )
                             )
 

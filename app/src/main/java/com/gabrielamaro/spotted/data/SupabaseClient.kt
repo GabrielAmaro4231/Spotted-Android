@@ -3,6 +3,7 @@ package com.gabrielamaro.spotted.data
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.storage.Storage
 
 val supabase = createSupabaseClient(
     supabaseUrl = "https://pfphdprnjlbbmqcabweu.supabase.co",
@@ -10,4 +11,5 @@ val supabase = createSupabaseClient(
 ) {
     install(Auth)
     install(Postgrest)
+    install(Storage) // <-- REQUIRED FOR UPLOADS
 }

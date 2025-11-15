@@ -19,6 +19,9 @@ material3 = "1.4.0"
 navigationCompose = "2.9.5"
 postgrestKt = "3.2.6"
 
+# ✅ Added Coil version
+coil = "2.6.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
@@ -33,6 +36,8 @@ supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt"
 supabase-realtime-kt = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "authKt" }
 supabase-compose-auth = { module = "io.github.jan-tennert.supabase:compose-auth", version.ref = "composeAuth" }
 
+# ✅ STORAGE
+supabase-storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "postgrestKt" }
 
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -50,6 +55,10 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClientAndroid" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+
+# ✅ Added Coil libraries
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+coil-core = { module = "io.coil-kt:coil", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
