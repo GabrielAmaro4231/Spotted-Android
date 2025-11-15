@@ -201,11 +201,20 @@ fun PostItem(fullPost: FullPost) {
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Line 3 — Formatted date
+            // Line 3 — Airline
+            Text(
+                text = post.aircraft_airline ?: "",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Line 4 — Formatted date
             Text(
                 text = formatDate(post.created_at),
                 style = MaterialTheme.typography.bodySmall
             )
+
         }
     }
 }
