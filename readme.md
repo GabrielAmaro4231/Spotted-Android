@@ -1,45 +1,85 @@
 # ✈️ Spotted
 
-O **Spotted** é um aplicativo desenvolvido para **entusiastas da aviação (plane spotters)** registrarem, organizarem e acompanharem suas fotografias de aeronaves.  
-Com ele, o usuário pode salvar informações como **matrícula**, **modelo**, **local**, **data/hora** e **foto** da aeronave, criando um catálogo pessoal de registros. Semelhante a uma “Pokédex”, mas para aviões vistos e fotografados.
+O **Spotted** é um aplicativo desenvolvido para **entusiastas da aviação (plane spotters)** registrarem e organizarem seus encontros com aeronaves.  
+A ideia central é simples: o usuário informa o **prefixo da aeronave** e o **aeroporto**, tira uma foto, e o app organiza tudo como uma espécie de “Pokédex” de aviões 📘✈️.
+
+Este repositório contém **duas versões oficiais do projeto**, cada uma desenvolvida para uma disciplina diferente:
+
+- **Versão Android - Room (Jetpack Compose + Room Database)**
+- **Versão Android - Supabase (Supabase: Auth + Database + Storage)**
+
+A **branch principal (`main`)** representa a **base comum** do projeto — o esqueleto inicial antes das implementações específicas de cada disciplina.
 
 ---
 
-## 📱 Funcionalidades Principais
+# 🔀 Branches do Projeto
 
-- Login com conta do **Google** (via Firebase Authentication)
-- Registro de aeronaves fotografadas com matrícula, modelo, local, data e foto
-- Armazenamento das informações no **Firebase Firestore**
-- Upload e sincronização das imagens no **Firebase Storage**
-- Visualização, edição e exclusão dos registros salvos
+Para facilitar a avaliação, cada professor pode acessar diretamente a versão correspondente clicando na branch correta.
 
 ---
 
-## 🧩 Tecnologias Utilizadas
+## ✅ 1. Versão para a disciplina de Android (Room Database)
 
-- **Linguagem:** Kotlin
-- **Framework:** Android Jetpack Compose
-- **Backend:** Firebase
-    - Firebase Authentication
-    - Firebase Firestore
-    - Firebase Storage
+**Branch:** `android_room_implementation`  
+🔗 **Código completo:**  
+https://github.com/GabrielAmaro4231/Spotted-Android/tree/android_room_implementation
 
----
+Esta versão foi desenvolvida para a disciplina de **Desenvolvimento de Aplicativos Android**, utilizando:
 
-## ⚙️ Como Executar o Projeto
-
-1. **Clone este repositório**
-2. **Abra o projeto no Android Studio.**
-3. **Configure o Firebase:**
-    - Crie um novo projeto no [Firebase Console](https://console.firebase.google.com/).
-    - Ative os serviços **Authentication (Google Sign-In)**, **Cloud Firestore** e **Storage**.
-    - Baixe o arquivo `google-services.json` e coloque-o na pasta `app/` do projeto.
-4. **Execute o aplicativo:**
-    - Conecte um dispositivo físico ou use um emulador Android.
-    - Clique em **Run ▶️** no Android Studio.
+- Android Jetpack Compose
+- Room Database
+- Fluxo local/offline
+- CRUD completo localmente
 
 ---
 
-## 📸 Sobre o Projeto
+## 🌐 2. Versão para a disciplina de mBaaS (Supabase)
 
-Este aplicativo foi desenvolvido como parte de um projeto acadêmico de pós-graduação, com o objetivo de aplicar conceitos de desenvolvimento mobile Android nativo e integração com serviços em nuvem (MBaaS).  
+**Branch:** `supabase_integration`  
+🔗 **Código completo:**  
+https://github.com/GabrielAmaro4231/Spotted-Android/tree/supabase_integration
+
+Esta versão foi desenvolvida posteriormente para a disciplina de **Webservices e MBaaS**, utilizando:
+
+- Supabase Auth (Google OAuth)
+- Supabase Database
+- Supabase Storage
+- Integração com API externa JetAPI.dev
+
+---
+
+# 📚 Sobre o Projeto
+
+O **Spotted** foi concebido como um aplicativo para registrar avistamentos de aeronaves, inspirado em grandes plataformas do mundo do spotting:
+
+- **JetPhotos**
+- **Planespotters.net**
+- **Airliners.net**
+
+A intenção é oferecer ao usuário um catálogo pessoal e organizado de registros, composto por:
+
+- Prefixo da aeronave
+- Aeroporto
+- Foto
+- Modelo e companhia aérea via API
+
+---
+
+# 🧩 Funcionalidades da Ideia Base (presentes na `main`)
+
+A branch principal contém apenas a **estrutura inicial compartilhada** entre as versões:
+
+- Navegação inicial entre telas
+- Layouts e componentes base com Jetpack Compose
+- Organização de pacotes
+- Arquitetura inicial do app
+
+As funcionalidades completas (persistência Room ou integração Supabase) estão nas suas respectivas branches.
+
+---
+
+# 📁 Estruturas Completas em Cada Branch
+
+Cada branch contém seu próprio README detalhado com instruções de execução, arquitetura e explicações técnicas.
+
+---
