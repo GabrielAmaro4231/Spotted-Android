@@ -5,8 +5,8 @@ A ideia central é simples: o usuário informa o **prefixo da aeronave** e o **a
 
 Este repositório contém **duas versões oficiais do projeto**, cada uma desenvolvida para uma disciplina diferente:
 
-- **Versão Android - Room (Jetpack Compose + Room Database)**
-- **Versão Android - Supabase (Supabase: Auth + Database + Storage)**
+- **Versão Android - Local (Room Database)**
+- **Versão Android - Supabase (Auth + Database + Storage)**
 
 A **branch principal (`main`)** representa a **base comum** do projeto — o esqueleto inicial antes das implementações específicas de cada disciplina.
 
@@ -18,11 +18,9 @@ Para facilitar a avaliação, cada professor pode acessar diretamente a versão 
 
 ---
 
-## ✅ 1. Versão para a disciplina de Android (Room Database)
+## ✅ 1. Versão para a disciplina de Desenvolvimento de Aplicativos Android (Room Database)
 
-**Branch:** `android_room_implementation`  
-🔗 **Código completo:**  
-https://github.com/GabrielAmaro4231/Spotted-Android/tree/android_room_implementation
+**Branch:** [`android_room_implementation`](https://github.com/GabrielAmaro4231/Spotted-Android/tree/android_room_implementation)
 
 Esta versão foi desenvolvida para a disciplina de **Desenvolvimento de Aplicativos Android**, utilizando:
 
@@ -33,11 +31,9 @@ Esta versão foi desenvolvida para a disciplina de **Desenvolvimento de Aplicati
 
 ---
 
-## 🌐 2. Versão para a disciplina de mBaaS (Supabase)
+## 🌐 2. Versão para a disciplina de Webservices e MBaaS (Supabase)
 
-**Branch:** `supabase_integration`  
-🔗 **Código completo:**  
-https://github.com/GabrielAmaro4231/Spotted-Android/tree/supabase_integration
+**Branch:** [`supabase_integration`](https://github.com/GabrielAmaro4231/Spotted-Android/tree/supabase_integration)
 
 Esta versão foi desenvolvida posteriormente para a disciplina de **Webservices e MBaaS**, utilizando:
 
@@ -52,9 +48,9 @@ Esta versão foi desenvolvida posteriormente para a disciplina de **Webservices 
 
 O **Spotted** foi concebido como um aplicativo para registrar avistamentos de aeronaves, inspirado em grandes plataformas do mundo do spotting:
 
-- **JetPhotos**
-- **Planespotters.net**
-- **Airliners.net**
+- **[JetPhotos](https://www.jetphotos.com)**
+- **[Planespotters.net](https://www.planespotters.net)**
+- **[Airliners.net](https://www.airliners.net)**
 
 A intenção é oferecer ao usuário um catálogo pessoal e organizado de registros, composto por:
 
@@ -81,5 +77,3 @@ As funcionalidades completas (persistência Room ou integração Supabase) estã
 # 📁 Estruturas Completas em Cada Branch
 
 Cada branch contém seu próprio README detalhado com instruções de execução, arquitetura e explicações técnicas.
-
----
