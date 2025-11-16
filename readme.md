@@ -1,3 +1,5 @@
+[📺 Clique aqui para assistir o vídeo de apresentação do projeto](https://www.youtube.com/watch?v=-pqJkkD-DAM)
+
 # ✈️ Spotted
 
 O **Spotted** é um aplicativo desenvolvido para **entusiastas da aviação (plane spotters)** registrarem e organizarem seus encontros com aeronaves.  
