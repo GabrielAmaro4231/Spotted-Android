@@ -21,14 +21,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ✅ Load values from local.properties
         val localProps = Properties()
         val localFile = rootProject.file("local.properties")
         if (localFile.exists()) {
             localFile.inputStream().use { localProps.load(it) }
         }
 
-        // ✅ Inject into BuildConfig
         buildConfigField(
             "String",
             "SUPABASE_URL",
@@ -97,12 +95,10 @@ dependencies {
     implementation(libs.supabase.auth.kt)
     implementation(libs.supabase.compose.auth)
 
-    // ✅ Required for Storage
     implementation(libs.supabase.storage.kt)
 
     implementation(libs.ktor.client.android)
 
-    // ✅ Coil
     implementation(libs.coil.compose)
     implementation(libs.coil.core)
 }
