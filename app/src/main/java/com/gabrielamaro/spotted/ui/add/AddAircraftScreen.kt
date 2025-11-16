@@ -36,15 +36,12 @@ import com.gabrielamaro.spotted.model.PostInsert
 @Composable
 fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
-    // Selected post from HomeViewModel (null => create mode)
     val selectedPost = viewModel.selectedPost
 
-    // UI state
-    var isEditMode by remember { mutableStateOf(selectedPost == null) } // create -> editable, view -> locked
+    var isEditMode by remember { mutableStateOf(selectedPost == null) }
     var loading by remember { mutableStateOf(false) }
 
-    // Form fields
-    var prefix by remember { mutableStateOf("") }                     // never editable when editing an existing post
+    var prefix by remember { mutableStateOf("") }
     var prefixError by remember { mutableStateOf<String?>(null) }
 
     var airportResults by remember { mutableStateOf<List<Airport>>(emptyList()) }
@@ -53,26 +50,21 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
     var airportSearchText by remember { mutableStateOf("") }
     var searchJob by remember { mutableStateOf<Job?>(null) }
 
-    // Image
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }    // new image picked locally (for create or edit)
-    var storedImageUrl by remember { mutableStateOf<String?>(null) }  // existing image url from post
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var storedImageUrl by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Initialize with selectedPost when it changes
     LaunchedEffect(selectedPost) {
         val sp = selectedPost
         if (sp != null) {
-            // view mode for existing post
             isEditMode = false
             prefix = sp.post.aircraft_prefix ?: ""
             storedImageUrl = sp.post.image_path
-            // If we have airport data merged, prefill search text and selectedAirport
             selectedAirport = sp.airport
             airportSearchText = selectedAirport?.let { "${it.airport_name} (${it.airport_icao})" } ?: ""
         } else {
-            // create mode
             isEditMode = true
             prefix = ""
             storedImageUrl = null
@@ -82,7 +74,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
         }
     }
 
-    // Image picker (enabled only in edit/create)
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -142,12 +133,11 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // Prefix (never editable for existing posts)
             Column {
                 OutlinedTextField(
                     value = prefix,
                     onValueChange = {
-                        if (selectedPost == null) { // only allow changing when creating new
+                        if (selectedPost == null) {
                             prefix = it.uppercase()
                             prefixError = null
                         }
@@ -155,7 +145,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                     label = { Text("Aircraft Prefix (e.g. PR-ABC)") },
                     modifier = Modifier.fillMaxWidth(),
                     isError = prefixError != null,
-                    enabled = selectedPost == null // disable for existing posts
+                    enabled = selectedPost == null
                 )
 
                 if (prefixError != null) {
@@ -168,7 +158,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 }
             }
 
-            // Airport search dropdown (enabled in edit/create)
             ExposedDropdownMenuBox(
                 expanded = airportMenuExpanded,
                 onExpandedChange = {
@@ -221,7 +210,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 }
             }
 
-            // Image area
             if (selectedImageUri != null) {
                 Image(
                     painter = rememberAsyncImagePainter(selectedImageUri),
@@ -240,7 +228,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                 )
             }
 
-            // Change image button (only in edit/create)
             if (isEditMode) {
                 Button(onClick = { imagePickerLauncher.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
                     Text("Pick Photo")
@@ -249,12 +236,9 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Action buttons
             if (selectedPost == null) {
-                // CREATE MODE
                 Button(
                     onClick = {
-                        // create new post
                         val pfx = prefix.trim()
                         val airportId = selectedAirport?.id ?: run {
                             Toast.makeText(context, "Please select an airport", Toast.LENGTH_SHORT).show()
@@ -266,7 +250,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
                         scope.launch {
                             try {
-                                // JetAPI lookup for model/airline
                                 val url = "https://www.jetapi.dev/api?reg=$pfx&photos=0&flights=0"
 
                                 val jsonText = withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -319,7 +302,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                                     }
                                 }
 
-                                // Insert post
                                 supabase.from("posts").insert(
                                     PostInsert(
                                         aircraft_prefix = pfx,
@@ -346,9 +328,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                     Text(if (loading) "Adding..." else "Add Aircraft")
                 }
             } else {
-                // EXISTING post -> view mode (with Edit/Delete)
                 if (!isEditMode) {
-                    // VIEW-ONLY: Edit + Delete
                     Button(onClick = { isEditMode = true }, modifier = Modifier.fillMaxWidth()) {
                         Text("Edit")
                     }
@@ -357,7 +337,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
                     Button(
                         onClick = {
-                            // Delete post + image
                             val postId = selectedPost.post.id
                             if (postId == null) {
                                 Toast.makeText(context, "Unable to delete: invalid post id", Toast.LENGTH_SHORT).show()
@@ -366,18 +345,16 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
 
                             scope.launch {
                                 try {
-                                    // delete post row
                                     supabase.from("posts").delete {
                                         filter { eq("id", postId) }
                                     }
 
-                                    // delete image from storage if exists
                                     val url = selectedPost.post.image_path
                                     if (!url.isNullOrBlank()) {
                                         val key = url.substringAfter("/object/public/aircraft-photos/")
                                         try {
                                             supabase.storage.from("aircraft-photos").delete(key)
-                                        } catch (_: Exception) { /* ignore delete error */ }
+                                        } catch (_: Exception) { }
                                     }
 
                                     Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show()
@@ -393,7 +370,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                         Text("Delete Post", color = MaterialTheme.colorScheme.onError)
                     }
                 } else {
-                    // EDIT MODE for existing post: allow changing airport and image (prefix remains locked)
                     Button(
                         onClick = {
                             val postId = selectedPost.post.id
@@ -413,7 +389,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                                 try {
                                     var uploadedImagePath: String? = selectedPost.post.image_path
 
-                                    // If user picked new image, upload and replace path
                                     if (selectedImageUri != null) {
                                         try {
                                             val inputStream: InputStream? = context.contentResolver.openInputStream(selectedImageUri!!)
@@ -432,13 +407,12 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                                                 uploadedImagePath =
                                                     "https://$projectId.supabase.co/storage/v1/object/public/aircraft-photos/$path"
 
-                                                // try deleting old image (best-effort)
                                                 val oldUrl = selectedPost.post.image_path
                                                 if (!oldUrl.isNullOrBlank()) {
                                                     val oldKey = oldUrl.substringAfter("/object/public/aircraft-photos/")
                                                     try {
                                                         supabase.storage.from("aircraft-photos").delete(oldKey)
-                                                    } catch (_: Exception) { /* ignore */ }
+                                                    } catch (_: Exception) { }
                                                 }
                                             }
                                         } catch (e: Exception) {
@@ -446,7 +420,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                                         }
                                     }
 
-                                    // Update DB row: airport_id and image_path (leave other fields untouched)
                                     supabase.from("posts").update({
                                         set("airport_id", airportId)
                                         set("image_path", uploadedImagePath)
@@ -455,9 +428,7 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                                     }
 
                                     Toast.makeText(context, "Post updated", Toast.LENGTH_SHORT).show()
-                                    // exit edit mode, refresh local state
                                     isEditMode = false
-                                    // update stored image url so UI shows new image
                                     storedImageUrl = uploadedImagePath
                                 } catch (e: Exception) {
                                     Toast.makeText(context, "Update failed: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -475,7 +446,6 @@ fun AddAircraftScreen(navController: NavController, viewModel: HomeViewModel) {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Button(onClick = {
-                        // Cancel edits: revert selectedImageUri and airport selection to stored values
                         selectedImageUri = null
                         selectedAirport = selectedPost.airport
                         airportSearchText = selectedAirport?.let { "${it.airport_name} (${it.airport_icao})" } ?: ""

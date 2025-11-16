@@ -16,7 +16,6 @@ import com.gabrielamaro.spotted.ui.login.LoginScreen
 @Composable
 fun AppNavigation(navController: NavHostController) {
 
-    // Shared ViewModel across Home + AddAircraft
     val homeViewModel: HomeViewModel = viewModel()
 
     NavHost(
@@ -24,9 +23,6 @@ fun AppNavigation(navController: NavHostController) {
         startDestination = "login"
     ) {
 
-        // ----------------------
-        // LOGIN
-        // ----------------------
         composable("login") {
             LoginScreen(
                 onLoginClick = {
@@ -37,9 +33,6 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // ----------------------
-        // HOME SCREEN
-        // ----------------------
         composable("home") {
             HomeScreen(
                 navController = navController,
@@ -47,26 +40,15 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        // ----------------------
-        // ADD NEW AIRCRAFT
-        // ----------------------
         composable("addAircraft/new") {
-
-            // NEW MODE → reset the selected post
             homeViewModel.updateSelectedPost(null)
-
             AddAircraftScreen(
                 navController = navController,
                 viewModel = homeViewModel
             )
         }
 
-        // ----------------------
-        // VIEW / EDIT AIRCRAFT
-        // ----------------------
         composable("addAircraft/view") {
-
-            // VIEW MODE → HomeScreen already set selectedPost before navigation
             AddAircraftScreen(
                 navController = navController,
                 viewModel = homeViewModel

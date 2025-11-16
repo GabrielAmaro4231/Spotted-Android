@@ -30,9 +30,6 @@ import kotlinx.coroutines.launch
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
-// ---------------------------------------------
-// Date formatting helper
-// ---------------------------------------------
 @RequiresApi(Build.VERSION_CODES.O)
 fun formatDate(dateString: String?): String {
     if (dateString.isNullOrBlank()) return "No date"
@@ -46,22 +43,18 @@ fun formatDate(dateString: String?): String {
     }
 }
 
-// ---------------------------------------------
-// Home Screen
-// ---------------------------------------------
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: com.gabrielamaro.spotted.ui.home.HomeViewModel
+    viewModel: HomeViewModel
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     var posts by remember { mutableStateOf<List<FullPost>>(emptyList()) }
 
-    // Load posts
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             try {
@@ -94,7 +87,6 @@ fun HomeScreen(
         }
     }
 
-    // UI Layout
     Scaffold(
         topBar = {
             TopAppBar(
@@ -134,9 +126,6 @@ fun HomeScreen(
     }
 }
 
-// ---------------------------------------------
-// Post Card (UPDATED WITH SHARE BUTTON)
-// ---------------------------------------------
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PostItem(fullPost: FullPost, onClick: () -> Unit) {
@@ -155,9 +144,6 @@ fun PostItem(fullPost: FullPost, onClick: () -> Unit) {
     ) {
         Column(Modifier.padding(16.dp)) {
 
-            // -------------------------------
-            // TOP ROW WITH SHARE BUTTON
-            // -------------------------------
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -173,29 +159,22 @@ fun PostItem(fullPost: FullPost, onClick: () -> Unit) {
                         try {
                             val rawPath = post.image_path ?: ""
 
-                            // If image_path is blank, finalUrl will be empty string
                             val finalUrl = when {
                                 rawPath.isBlank() -> {
                                     ""
                                 }
 
-                                // If it's already a full URL, try to extract the relative path after the storage public marker
                                 rawPath.startsWith("http", ignoreCase = true) -> {
-                                    // marker that appears in Supabase public URLs for this bucket
                                     val marker = "/storage/v1/object/public/aircraft-photos/"
                                     val idx = rawPath.indexOf(marker)
                                     if (idx != -1) {
-                                        // relative path: e.g. "aircraft_photos/aircraft_1763....jpg"
                                         val relative = rawPath.substring(idx + marker.length)
-                                        // Build canonical public URL via supabase helper
                                         supabase.storage.from("aircraft-photos").publicUrl(relative)
                                     } else {
-                                        // If the marker wasn't found, maybe rawPath is already a clean public URL — use it directly
                                         rawPath
                                     }
                                 }
 
-                                // rawPath looks like a relative path already (e.g., "aircraft_photos/xxx.jpg")
                                 else -> {
                                     supabase.storage.from("aircraft-photos").publicUrl(rawPath)
                                 }
@@ -243,9 +222,6 @@ fun PostItem(fullPost: FullPost, onClick: () -> Unit) {
     }
 }
 
-// ---------------------------------------------
-// Sign Out
-// ---------------------------------------------
 @Composable
 fun GoogleSignOutButton(navController: NavController) {
     val context = LocalContext.current
