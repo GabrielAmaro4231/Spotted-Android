@@ -10,9 +10,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.gabrielamaro.spotted.data.supabase
@@ -22,6 +25,7 @@ import com.gabrielamaro.spotted.model.FullPost
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.launch
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -50,7 +54,7 @@ fun formatDate(dateString: String?): String {
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: com.gabrielamaro.spotted.ui.home.HomeViewModel          // ✅ now using your model file's HomeViewModel
+    viewModel: com.gabrielamaro.spotted.ui.home.HomeViewModel
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -101,7 +105,7 @@ fun HomeScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.updateSelectedPost(null)  // NEW AIRCRAFT MODE
+                    viewModel.updateSelectedPost(null)
                     navController.navigate("addAircraft/new")
                 }
             ) {
@@ -121,10 +125,8 @@ fun HomeScreen(
 
                 PostItem(fullPost) {
 
-                    // 👇 Select post in ViewModel
                     viewModel.updateSelectedPost(fullPost)
 
-                    // 👇 Go to read-only AddAircraft screen
                     navController.navigate("addAircraft/view")
                 }
             }
@@ -133,13 +135,16 @@ fun HomeScreen(
 }
 
 // ---------------------------------------------
-// Post Card
+// Post Card (UPDATED WITH SHARE BUTTON)
 // ---------------------------------------------
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PostItem(fullPost: FullPost, onClick: () -> Unit) {
     val post = fullPost.post
     val airport = fullPost.airport
+
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
 
     Card(
         modifier = Modifier
@@ -150,10 +155,68 @@ fun PostItem(fullPost: FullPost, onClick: () -> Unit) {
     ) {
         Column(Modifier.padding(16.dp)) {
 
-            Text(
-                text = "${post.aircraft_prefix ?: "???"} (${post.aircraft_model ?: "unknown"})",
-                style = MaterialTheme.typography.titleMedium
-            )
+            // -------------------------------
+            // TOP ROW WITH SHARE BUTTON
+            // -------------------------------
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                Text(
+                    text = "${post.aircraft_prefix ?: "???"} (${post.aircraft_model ?: "unknown"})",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                IconButton(
+                    onClick = {
+                        try {
+                            val rawPath = post.image_path ?: ""
+
+                            // If image_path is blank, finalUrl will be empty string
+                            val finalUrl = when {
+                                rawPath.isBlank() -> {
+                                    ""
+                                }
+
+                                // If it's already a full URL, try to extract the relative path after the storage public marker
+                                rawPath.startsWith("http", ignoreCase = true) -> {
+                                    // marker that appears in Supabase public URLs for this bucket
+                                    val marker = "/storage/v1/object/public/aircraft-photos/"
+                                    val idx = rawPath.indexOf(marker)
+                                    if (idx != -1) {
+                                        // relative path: e.g. "aircraft_photos/aircraft_1763....jpg"
+                                        val relative = rawPath.substring(idx + marker.length)
+                                        // Build canonical public URL via supabase helper
+                                        supabase.storage.from("aircraft-photos").publicUrl(relative)
+                                    } else {
+                                        // If the marker wasn't found, maybe rawPath is already a clean public URL — use it directly
+                                        rawPath
+                                    }
+                                }
+
+                                // rawPath looks like a relative path already (e.g., "aircraft_photos/xxx.jpg")
+                                else -> {
+                                    supabase.storage.from("aircraft-photos").publicUrl(rawPath)
+                                }
+                            }
+
+                            val urlToCopy = finalUrl
+                            if (urlToCopy.isBlank()) {
+                                Toast.makeText(context, "No image URL available to copy", Toast.LENGTH_SHORT).show()
+                            } else {
+                                clipboard.setText(AnnotatedString(urlToCopy))
+                                Toast.makeText(context, "Image URL copied!", Toast.LENGTH_SHORT).show()
+                            }
+
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Error copying URL: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = "Share Image")
+                }
+            }
 
             Spacer(Modifier.height(6.dp))
 
