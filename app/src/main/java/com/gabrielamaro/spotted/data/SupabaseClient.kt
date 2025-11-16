@@ -1,15 +1,16 @@
 package com.gabrielamaro.spotted.data
 
+import com.gabrielamaro.spotted.BuildConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
 
 val supabase = createSupabaseClient(
-    supabaseUrl = "https://pfphdprnjlbbmqcabweu.supabase.co",
-    supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmcGhkcHJuamxiYm1xY2Fid2V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0OTUyMjUsImV4cCI6MjA3NzA3MTIyNX0.9-mUqjSSVcVH7aQPE12-S0d0ijmjIDBNgDbuBGIyx9E"
+    supabaseUrl = BuildConfig.SUPABASE_URL,
+    supabaseKey = BuildConfig.SUPABASE_KEY
 ) {
     install(Auth)
     install(Postgrest)
-    install(Storage) // <-- REQUIRED FOR UPLOADS
+    install(Storage)
 }

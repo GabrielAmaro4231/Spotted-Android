@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -18,6 +20,25 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // ✅ Load values from local.properties
+        val localProps = Properties()
+        val localFile = rootProject.file("local.properties")
+        if (localFile.exists()) {
+            localFile.inputStream().use { localProps.load(it) }
+        }
+
+        // ✅ Inject into BuildConfig
+        buildConfigField(
+            "String",
+            "SUPABASE_URL",
+            "\"${localProps.getProperty("SUPABASE_URL")}\""
+        )
+        buildConfigField(
+            "String",
+            "SUPABASE_KEY",
+            "\"${localProps.getProperty("SUPABASE_KEY")}\""
+        )
     }
 
     buildTypes {
@@ -41,6 +62,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -75,12 +97,12 @@ dependencies {
     implementation(libs.supabase.auth.kt)
     implementation(libs.supabase.compose.auth)
 
-    // ✅ REQUIRED FOR STORAGE
+    // ✅ Required for Storage
     implementation(libs.supabase.storage.kt)
 
     implementation(libs.ktor.client.android)
 
-    // ✅ COIL (Image Loader)
+    // ✅ Coil
     implementation(libs.coil.compose)
     implementation(libs.coil.core)
 }
