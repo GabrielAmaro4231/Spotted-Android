@@ -1,5 +1,7 @@
 package com.gabrielamaro.spotted.ui.home
 
+import android.content.ClipData
+import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -13,9 +15,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.gabrielamaro.spotted.data.supabase
@@ -133,7 +133,7 @@ fun PostItem(fullPost: FullPost, onClick: () -> Unit) {
     val airport = fullPost.airport
 
     val context = LocalContext.current
-    val clipboard = LocalClipboardManager.current
+    val coroutineScope = rememberCoroutineScope()
 
     Card(
         modifier = Modifier
@@ -156,40 +156,40 @@ fun PostItem(fullPost: FullPost, onClick: () -> Unit) {
 
                 IconButton(
                     onClick = {
-                        try {
-                            val rawPath = post.image_path ?: ""
+                        coroutineScope.launch {
+                            try {
+                                val rawPath = post.image_path ?: ""
 
-                            val finalUrl = when {
-                                rawPath.isBlank() -> {
-                                    ""
-                                }
+                                val finalUrl = when {
+                                    rawPath.isBlank() -> ""
 
-                                rawPath.startsWith("http", ignoreCase = true) -> {
-                                    val marker = "/storage/v1/object/public/aircraft-photos/"
-                                    val idx = rawPath.indexOf(marker)
-                                    if (idx != -1) {
-                                        val relative = rawPath.substring(idx + marker.length)
-                                        supabase.storage.from("aircraft-photos").publicUrl(relative)
-                                    } else {
-                                        rawPath
+                                    rawPath.startsWith("http", ignoreCase = true) -> {
+                                        val marker = "/storage/v1/object/public/aircraft-photos/"
+                                        val idx = rawPath.indexOf(marker)
+                                        if (idx != -1) {
+                                            val relative = rawPath.substring(idx + marker.length)
+                                            supabase.storage.from("aircraft-photos").publicUrl(relative)
+                                        } else rawPath
+                                    }
+
+                                    else -> {
+                                        supabase.storage.from("aircraft-photos").publicUrl(rawPath)
                                     }
                                 }
 
-                                else -> {
-                                    supabase.storage.from("aircraft-photos").publicUrl(rawPath)
+                                if (finalUrl.isBlank()) {
+                                    Toast.makeText(context, "No image URL available to copy", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    val androidClipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                    val clip = ClipData.newPlainText("Image URL", finalUrl)
+                                    androidClipboard.setPrimaryClip(clip)
+
+                                    Toast.makeText(context, "Image URL copied!", Toast.LENGTH_SHORT).show()
                                 }
-                            }
 
-                            val urlToCopy = finalUrl
-                            if (urlToCopy.isBlank()) {
-                                Toast.makeText(context, "No image URL available to copy", Toast.LENGTH_SHORT).show()
-                            } else {
-                                clipboard.setText(AnnotatedString(urlToCopy))
-                                Toast.makeText(context, "Image URL copied!", Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Error copying URL: ${e.message}", Toast.LENGTH_SHORT).show()
                             }
-
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Error copying URL: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 ) {
